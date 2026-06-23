@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Secrets / local config
+.env
+.env.local
+
+# Provided dataset (read-only, not redistributed) — drop loads_part_*.txt under ./data/
+data/
+*.zip
+
+# OS
+.DS_Store
