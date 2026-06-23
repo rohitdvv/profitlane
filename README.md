@@ -14,6 +14,48 @@ ProfitLane recommends the single load with the **highest NET profit** (not gross
   2. Write the human-readable explanation
 - Every dollar you see on screen can be reproduced by reading the code.
 
+## Architecture
+
+The LLM sits **only at the edges** — parsing the request in, writing prose out. Everything
+between (filtering, distance, cost, ranking) is deterministic Python. Numbers never pass
+through the model.
+
+```mermaid
+flowchart TD
+    U["🚛 Driver / Dispatcher<br/>NL query · or Location + Equipment + Radius"] --> APP["app.py — FastAPI<br/>single-page dashboard"]
+    APP -->|"POST /api/recommend"| AG["agent.py<br/>orchestrator"]
+
+    subgraph LLM["🟣 Claude (claude-sonnet-4-6) — TEXT ONLY, never math"]
+      direction LR
+      P["parse_query<br/>NL → location + equipment"]
+      E["explanation<br/>prose grounded in the numbers"]
+    end
+
+    subgraph DET["🟢 Deterministic core — pure Python, every number reproducible"]
+      DL["data_layer.py<br/>parse ~100k loads (cached)<br/>market scores · city coords"]
+      FS["forward_scorer.py<br/>radius filter · deadhead pricing<br/>rank by net profit"]
+      CE["cost_engine.py<br/>haversine + itemized costs<br/>fleet net + owner take-home"]
+    end
+
+    AG -->|"1 · parse"| P
+    P --> AG
+    AG -->|"2 · filter by equipment"| DL
+    DL -->|"candidates"| FS
+    FS -->|"per load"| CE
+    CE -->|"cost breakdown"| FS
+    FS -->|"ranked loads + stats"| AG
+    AG -->|"3 · write prose"| E
+    E --> AG
+    AG -->|"JSON: loads · stats · #1 vs highest-gross · markets · explanation"| APP
+    APP --> OUT["📊 Dashboard<br/>KPI strip · #1 pick vs highest-gross<br/>cost waterfall · top-10 markets"]
+```
+
+**Flow:** request → `agent.py` asks Claude to parse it → `data_layer` filters loads by
+equipment → `forward_scorer` keeps loads within pickup radius, prices deadhead from the
+destination market, and calls `cost_engine` for each → ranks by net profit → Claude writes
+a grounded summary → `app.py` renders the dashboard. The two purple nodes are the *only*
+LLM calls; both produce text, never figures.
+
 ## Quick Start
 
 ```bash
