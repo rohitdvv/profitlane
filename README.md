@@ -115,7 +115,7 @@ market_score = 0.40 * norm(outbound_demand)
 ```
 lane_balance = loads_out / loads_in (high = easy to leave)
 
-## Demo "Aha" Moment
+## Demo "Aha" Moment for users
 The UI prominently shows #1 (by net) next to the highest-gross load so judges immediately see why the smart recommendation can have lower gross but much higher net.
 
 ## Notes
