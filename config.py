@@ -4,8 +4,19 @@ All editable constants in one place.
 Money math is 100% deterministic here - never in the LLM.
 """
 
-# === MODEL (pinned exactly as specified) ===
-MODEL = "claude-sonnet-4-6"
+import os as _os
+
+# === BRAND ===
+BRAND = {
+    "name": "ProfitLane",
+    "tagline": "See what you actually keep.",
+    "promise": "The load board that ranks by net profit, not gross.",
+}
+
+# === MODEL ===
+# Latest Sonnet by default; override with PROFITLANE_MODEL (e.g. the original
+# hackathon pin "claude-sonnet-4-6"). The model only parses text and writes prose.
+MODEL = _os.environ.get("PROFITLANE_MODEL", "claude-sonnet-5-5")
 
 # === Cost engine defaults (from spec) ===
 # Override by editing here or (future) via env/CLI.
@@ -25,7 +36,6 @@ DEFAULTS = {
 # The loader looks here first, then falls back to ./data, ../data, etc.
 # Point it at the folder holding the loads_part_*.txt files. Override with the
 # LOADS_DATA_DIR env var, or just drop the files in a ./data/ folder.
-import os as _os
 DATA_DIR = _os.environ.get("LOADS_DATA_DIR", _os.path.join(_os.path.dirname(__file__), "data"))
 
 # Fallback coords for popular driver starting cities (used if not in learned CITY_COORDS)
@@ -64,6 +74,64 @@ PICKUP_RADIUS_MILES = 250     # only recommend loads originating within this of 
 HIDE_UNPROFITABLE = True      # by default hide loads whose net profit < MIN_NET_PROFIT
 MIN_NET_PROFIT = 0.0          # threshold used when HIDE_UNPROFITABLE is on
 RETURN_TOP_N = 25             # how many ranked loads to return to the UI (client re-sorts on toggle)
+
+# === Profit Chain (two-load lookahead, deterministic) ===
+# For the best CHAIN_FIRST_LEGS loads, find the best follow-on load out of each
+# destination. The first leg's *estimated* empty-out is replaced by the *actual*
+# drive to the second pickup. Second pickup must be on/after first delivery day.
+CHAIN_FIRST_LEGS = 8
+CHAIN_SHOW = 3
+
+# === Plans (single source of truth for pricing + gating) ===
+# Benchmarks (2026): DAT One carrier plans start at $59/mo; TruckSmarter $49/mo.
+# None = unlimited.
+PLANS = {
+    "free": {
+        "name": "Free", "price": 0, "per": "month",
+        "daily_searches": 5, "board_rows": 3, "chains": False, "api": False,
+        "features": ["#1 smart pick vs highest-gross", "Top 3 loads", "5 searches / day"],
+    },
+    "pro": {
+        "name": "Pro", "price": 39, "per": "month",
+        "daily_searches": None, "board_rows": None, "chains": True, "api": False,
+        "features": ["Full ranked board", "Profit Chain: plan 2 loads ahead",
+                     "Unlimited searches", "Owner-op + fleet math"],
+    },
+    "fleet": {
+        "name": "Fleet", "price": 29, "per": "truck / month", "min_trucks": 3,
+        "daily_searches": None, "board_rows": None, "chains": True, "api": True,
+        "features": ["Everything in Pro", "REST API for your TMS / dispatch",
+                     "Per-truck billing", "Priority support"],
+    },
+}
+
+# === Persistence (local SQLite, no server) ===
+DB_PATH = _os.environ.get("PROFITLANE_DB", _os.path.join(_os.path.dirname(__file__), "profitlane.db"))
+
+# === Billing: Stripe Payment Links (no SDK; configure links in the Stripe dashboard) ===
+# *_URL is where the Upgrade button sends the user; *_ID (plink_...) is how the
+# webhook knows which plan was bought. Without these, Upgrade captures a lead instead.
+STRIPE_LINKS = {
+    "pro": {"url": _os.environ.get("STRIPE_LINK_PRO_URL"), "id": _os.environ.get("STRIPE_LINK_PRO_ID")},
+    "fleet": {"url": _os.environ.get("STRIPE_LINK_FLEET_URL"), "id": _os.environ.get("STRIPE_LINK_FLEET_ID")},
+}
+STRIPE_WEBHOOK_SECRET = _os.environ.get("STRIPE_WEBHOOK_SECRET")
+ADMIN_TOKEN = _os.environ.get("PROFITLANE_ADMIN_TOKEN")
+COOKIE_SECURE = _os.environ.get("PROFITLANE_COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+
+# === Partner revenue (referral links; a CTA only appears when its URL is set) ===
+PARTNERS = {
+    "factoring": {
+        "url": _os.environ.get("PARTNER_FACTORING_URL"),
+        "label": "Get paid in 24 hours instead of 30-60 days",
+    },
+    "fuel": {
+        "url": _os.environ.get("PARTNER_FUEL_URL"),
+        "label": "Save on this load's fuel",
+    },
+}
+# Assumed partner fuel discount used for the on-load savings estimate (editable).
+FUEL_DISCOUNT_PER_GALLON = float(_os.environ.get("FUEL_DISCOUNT_PER_GALLON", "0.25"))
 
 # Normalize market names consistently
 def normalize_market_name(name: str) -> str:

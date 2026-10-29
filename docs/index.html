@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ProfitLane — See what you actually keep</title>
+<meta name="description" content="The load board that ranks by net profit, not gross. Prices in empty miles and plans two loads ahead."/>
+<meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)"/>
+<meta name="theme-color" content="#1e232b" media="(prefers-color-scheme: dark)"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230e9f6e'/%3E%3Cpath d='M9 23 L16 9 L23 23' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M16 16v7' stroke='white' stroke-width='3' stroke-linecap='round' stroke-dasharray='2 3'/%3E%3C/svg%3E"/>
+<style>
+/* =========================================================
+   Tokens
+   ========================================================= */
+:root{
+  --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f2f4f7; --surface-3:#eaecf0;
+  --border:#e4e7ec; --border-strong:#d0d5dd;
+  --text:#0b1220; --text-2:#475467; --text-3:#8a94a6;
+  --brand:#0e9f6e; --brand-strong:#057a55; --brand-soft:#e6f6ef; --brand-ink:#05603a;
+  --neg:#d92d20; --neg-soft:#fef3f2; --warn:#b54708; --warn-soft:#fffaeb;
+  --c-fuel:#f79009; --c-driver:#7a5af8; --c-maint:#2e90fa; --c-ins:#ee46bc; --c-toll:#98a2b3;
+  --shadow-sm:0 1px 2px rgba(16,24,40,.05);
+  --shadow:0 1px 3px rgba(16,24,40,.06),0 8px 24px -8px rgba(16,24,40,.10);
+  --shadow-lg:0 24px 64px -16px rgba(16,24,40,.22);
+  --ring:0 0 0 4px rgba(14,159,110,.18);
+  --nav:rgba(247,248,250,.78);
+  --radius:16px; --radius-sm:10px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1e232b; --surface:#272d36; --surface-2:#2f363f; --surface-3:#38404a;
+    --border:#3a424d; --border-strong:#4b5461;
+    --text:#eef1f5; --text-2:#b4bdc9; --text-3:#8a94a3;
+    --brand:#34d399; --brand-strong:#6ee7b7; --brand-soft:rgba(52,211,153,.12); --brand-ink:#a7f3d0;
+    --neg:#f97066; --neg-soft:rgba(249,112,102,.12); --warn:#fdb022; --warn-soft:rgba(253,176,34,.12);
+    --shadow-sm:0 1px 2px rgba(0,0,0,.18);
+    --shadow:0 1px 2px rgba(0,0,0,.18),0 8px 24px -8px rgba(0,0,0,.28);
+    --shadow-lg:0 24px 64px -16px rgba(0,0,0,.4);
+    --ring:0 0 0 4px rgba(52,211,153,.22);
+    --nav:rgba(30,35,43,.82);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1e232b; --surface:#272d36; --surface-2:#2f363f; --surface-3:#38404a;
+  --border:#3a424d; --border-strong:#4b5461;
+  --text:#eef1f5; --text-2:#b4bdc9; --text-3:#8a94a3;
+  --brand:#34d399; --brand-strong:#6ee7b7; --brand-soft:rgba(52,211,153,.12); --brand-ink:#a7f3d0;
+  --neg:#f97066; --neg-soft:rgba(249,112,102,.12); --warn:#fdb022; --warn-soft:rgba(253,176,34,.12);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.18);
+  --shadow:0 1px 2px rgba(0,0,0,.18),0 8px 24px -8px rgba(0,0,0,.28);
+  --shadow-lg:0 24px 64px -16px rgba(0,0,0,.4);
+  --ring:0 0 0 4px rgba(52,211,153,.22);
+  --nav:rgba(30,35,43,.82);
+  color-scheme:dark;
+}
+
+/* =========================================================
+   Base
+   ========================================================= */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01";
+  transition:background .3s ease,color .3s ease}
+.num,td,.big,.stat b{font-variant-numeric:tabular-nums}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:none;box-shadow:var(--ring);border-radius:8px}
+.hide{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg.i.sm{width:15px;height:15px}
+
+/* =========================================================
+   Nav
+   ========================================================= */
+.nav{position:sticky;top:0;z-index:40;background:var(--nav);backdrop-filter:saturate(180%) blur(16px);
+  -webkit-backdrop-filter:saturate(180%) blur(16px);border-bottom:1px solid var(--border)}
+.nav .wrap{display:flex;align-items:center;gap:28px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.4px;font-size:17px;text-decoration:none}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(140deg,#16c784,#0e9f6e 55%,#057a55);
+  display:grid;place-items:center;box-shadow:0 4px 12px -2px rgba(14,159,110,.45)}
+.links{display:flex;gap:4px}
+.links button{border:0;background:none;padding:8px 12px;border-radius:9px;color:var(--text-2);font-weight:500;font-size:14px;transition:.15s}
+.links button:hover{color:var(--text);background:var(--surface-2)}
+.links button[aria-current="page"]{color:var(--text);background:var(--surface-2);font-weight:600}
+.navr{margin-left:auto;display:flex;align-items:center;gap:10px}
+.found{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);padding:6px 11px;border-radius:99px;
+  background:var(--brand-soft)}
+.found b{color:var(--brand-ink)}
+.plan{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:99px;
+  border:1px solid var(--border-strong);color:var(--text-2)}
+.plan.paid{border-color:var(--brand);color:var(--brand-ink);background:var(--brand-soft)}
+.quota{font-size:13px;color:var(--text-3)}
+.iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;
+  color:var(--text-2);transition:.15s}
+.iconbtn:hover{color:var(--text);border-color:var(--border-strong)}
+
+/* =========================================================
+   Buttons
+   ========================================================= */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 15px;border-radius:10px;
+  border:1px solid var(--border-strong);background:var(--surface);font-weight:600;font-size:14px;transition:transform .12s,box-shadow .15s,background .15s;
+  white-space:nowrap;text-decoration:none}
+.btn:hover{background:var(--surface-2)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--text);color:var(--bg);border-color:transparent;box-shadow:var(--shadow-sm)}
+.btn.primary:hover{opacity:.9}
+.btn.brand{background:linear-gradient(180deg,#14b47c,#0e9f6e);color:#fff;border-color:transparent;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 6px 16px -6px rgba(14,159,110,.6)}
+.btn.brand:hover{filter:brightness(1.06)}
+.btn.ghost{border-color:transparent;background:none}
+.btn.lg{height:48px;padding:0 22px;font-size:15px;border-radius:12px}
+.btn[disabled]{opacity:.5;pointer-events:none}
+
+/* =========================================================
+   Hero + search
+   ========================================================= */
+.hero{padding:56px 0 28px;text-align:center}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border-radius:99px;border:1px solid var(--border);
+  background:var(--surface);font-size:13px;color:var(--text-2);box-shadow:var(--shadow-sm)}
+.pill .dot{padding:2px 8px;border-radius:99px;background:var(--brand-soft);color:var(--brand-ink);font-weight:600;font-size:12px}
+.hero h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;letter-spacing:-.035em;font-weight:800;margin:20px auto 14px;max-width:820px}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,#0e9f6e,#16c784 50%,#2e90fa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:clamp(16px,1.6vw,19px);color:var(--text-2);max-width:620px;margin:0 auto;line-height:1.55}
+
+.search{margin:32px auto 0;max-width:980px;background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  box-shadow:var(--shadow);padding:8px;text-align:left}
+.modes{display:flex;gap:2px;padding:4px 4px 8px}
+.modes button{border:0;background:none;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text-3);display:flex;align-items:center;gap:6px}
+.modes button[aria-selected="true"]{color:var(--text);background:var(--surface-2)}
+.row{display:flex;align-items:stretch;gap:0;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.field{display:flex;flex-direction:column;justify-content:center;padding:10px 16px;min-width:0;position:relative}
+.field+.field{border-left:1px solid var(--border)}
+.field label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:3px}
+.field input[type=text]{border:0;outline:0;background:none;font:inherit;font-size:16px;font-weight:600;color:var(--text);padding:0;width:100%}
+.field input::placeholder{color:var(--text-3);font-weight:500}
+.f-loc{flex:1.25}.f-eq{flex:1.6}.f-rad{flex:1}
+.seg{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{border:1px solid var(--border);background:var(--surface);padding:4px 10px;border-radius:99px;font-size:13px;font-weight:600;color:var(--text-2);transition:.15s;white-space:nowrap}
+.seg button:hover{border-color:var(--border-strong);color:var(--text)}
+.seg button[aria-pressed="true"]{background:var(--text);border-color:var(--text);color:var(--bg)}
+.radius{display:flex;align-items:center;gap:10px}
+.radius b{font-size:16px;min-width:62px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;background:var(--surface-3);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--surface);
+  border:2px solid var(--brand);box-shadow:var(--shadow-sm);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--brand);cursor:pointer}
+.go{display:flex;align-items:center;padding:6px}
+.ask{flex:1;display:flex;align-items:center;gap:10px;padding:0 16px;color:var(--text-3)}
+.ask input{flex:1;border:0;outline:0;background:none;font:inherit;font-size:16px;font-weight:500;color:var(--text);padding:16px 0}
+.prefs{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 8px 4px;flex-wrap:wrap}
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-2)}
+.tog{display:inline-flex;padding:3px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border)}
+.tog button{border:0;background:none;padding:5px 11px;border-radius:7px;font-size:13px;font-weight:600;color:var(--text-2);transition:.15s}
+.tog button[aria-pressed="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm)}
+.switch{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2);border:0;background:none;padding:4px}
+.switch i{width:34px;height:20px;border-radius:99px;background:var(--surface-3);position:relative;transition:.2s}
+.switch i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:.2s}
+.switch[aria-checked="true"] i{background:var(--brand)}
+.switch[aria-checked="true"] i::after{left:16px}
+
+/* =========================================================
+   Results
+   ========================================================= */
+main{padding-bottom:96px}
+.section{margin-top:28px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:40px 0 16px;flex-wrap:wrap}
+.head h2{margin:0;font-size:22px;letter-spacing:-.02em}
+.head p{margin:4px 0 0;color:var(--text-2);font-size:14px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{padding:7px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);font-size:13px;color:var(--text-2)}
+.stat b{color:var(--text);font-weight:700;margin-right:4px}
+.stat.good b{color:var(--brand)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.pad{padding:24px}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3)}
+.eyebrow.good{color:var(--brand)}
+.reveal{animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* Verdict */
+.verdict{display:grid;grid-template-columns:1.15fr 1fr;overflow:hidden}
+.v-main{padding:28px;position:relative}
+.v-main::before{content:"";position:absolute;inset:0;background:radial-gradient(600px 220px at 0% 0%,var(--brand-soft),transparent 70%);pointer-events:none}
+.v-main>*{position:relative}
+.lane{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:clamp(22px,2.6vw,30px);font-weight:800;letter-spacing:-.03em;margin:12px 0 18px;line-height:1.15}
+.lane .arrow{color:var(--text-3);display:inline-flex}
+.keeprow{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.keeprow .lbl{font-size:14px;color:var(--text-2);font-weight:500}
+.big{font-size:clamp(44px,6vw,64px);font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--brand)}
+.big.neg{color:var(--neg)}
+.badge{font-size:12.5px;font-weight:700;padding:4px 9px;border-radius:8px;background:var(--brand-soft);color:var(--brand-ink)}
+.badge.neg{background:var(--neg-soft);color:var(--neg)}
+.facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:var(--surface-2);font-size:12.5px;color:var(--text-2);font-weight:500}
+.chip b{color:var(--text);font-weight:600}
+.v-side{border-left:1px solid var(--border);padding:28px;background:var(--surface-2);display:flex;flex-direction:column;gap:18px}
+.cmp-title{font-size:14px;font-weight:600;margin:0}
+.cmp-title small{display:block;color:var(--text-2);font-weight:400;margin-top:2px}
+.cmp{display:grid;gap:16px}
+.cmp-item .nm{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:600;margin-bottom:8px}
+.cmp-item .nm span{color:var(--text-3);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars{display:grid;gap:6px}
+.barrow{display:grid;grid-template-columns:62px 1fr 64px;align-items:center;gap:10px;font-size:12.5px;color:var(--text-2)}
+.barrow .v{text-align:right;font-weight:600;color:var(--text)}
+.track{height:10px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.track i{display:block;height:100%;border-radius:99px;transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes grow{from{transform:scaleX(0)}}
+.track i.pay{background:var(--border-strong)}
+.track i.keep{background:var(--brand)}
+.track i.keep.neg{background:var(--neg)}
+.callout{font-size:13.5px;line-height:1.55;color:var(--text-2);padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border)}
+.callout b{color:var(--text)}
+.callout .g{color:var(--brand);font-weight:700}
+
+/* Detail grid */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.ct{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.ct h3{margin:0;font-size:15px;letter-spacing:-.01em}
+.ct span{font-size:12.5px;color:var(--text-3)}
+.stack{display:flex;height:14px;border-radius:99px;overflow:hidden;gap:2px;background:var(--surface-2)}
+.stack i{display:block;height:100%;transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1) both}
+.legend{display:grid;gap:9px;margin-top:18px}
+.lgd{display:grid;grid-template-columns:12px 1fr auto 44px;gap:10px;align-items:center;font-size:13.5px}
+.lgd .sw{width:10px;height:10px;border-radius:3px}
+.lgd .v{font-weight:600;text-align:right}
+.lgd .p{color:var(--text-3);text-align:right;font-size:12.5px}
+.lgd.total{border-top:1px solid var(--border);padding-top:11px;margin-top:3px;font-weight:700}
+.route{display:flex;height:40px;border-radius:12px;overflow:hidden;gap:3px}
+.route>div{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;
+  transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1) both;min-width:6px}
+.r-in{background:repeating-linear-gradient(135deg,var(--surface-3) 0 6px,var(--surface-2) 6px 12px);color:var(--text-2)}
+.r-load{background:var(--brand);color:var(--surface)}
+.r-out{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--warn) 30%,transparent) 0 6px,color-mix(in srgb,var(--warn) 14%,transparent) 6px 12px);color:var(--warn)}
+.r-in{background:repeating-linear-gradient(135deg,var(--border-strong) 0 6px,var(--surface-3) 6px 12px)}
+.rlegend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--text-2)}
+.rlegend span{display:flex;align-items:center;gap:6px}
+.rlegend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+.kv div{padding:12px;border-radius:12px;background:var(--surface-2)}
+.kv small{display:block;font-size:12px;color:var(--text-3);margin-bottom:2px}
+.kv b{font-size:17px;letter-spacing:-.02em}
+.gauge{margin-top:18px}
+.gauge .top{display:flex;justify-content:space-between;font-size:13px;color:var(--text-2);margin-bottom:8px}
+.gauge .top b{color:var(--text)}
+.gtrack{position:relative;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--neg),var(--warn) 45%,var(--brand))}
+.gtrack i{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:var(--surface);border:3px solid var(--text);transform:translate(-50%,-50%);
+  transition:left .8s cubic-bezier(.2,.8,.2,1)}
+
+/* AI summary */
+.ai{display:flex;gap:14px;align-items:flex-start;margin-top:16px;padding:18px 20px}
+.ai .ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff;
+  background:linear-gradient(140deg,#7a5af8,#2e90fa)}
+.ai p{margin:2px 0 0;color:var(--text-2);font-size:14.5px;line-height:1.6}
+.ai small{font-size:12px;color:var(--text-3);font-weight:600}
+
+/* Offers */
+.offers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:16px}
+.offer{display:flex;align-items:center;gap:14px;padding:16px 18px;text-decoration:none;transition:transform .15s,box-shadow .15s,border-color .15s}
+.offer:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--border-strong)}
+.offer .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.offer .t{font-weight:600;font-size:14px}
+.offer .s{font-size:13px;color:var(--text-2)}
+.offer .go2{margin-left:auto;color:var(--text-3)}
+
+/* Chain */
+.chain{padding:20px 24px;border-top:1px solid var(--border)}
+.chain:first-of-type{border-top:0}
+.tl{display:flex;align-items:flex-start;gap:0;margin:0 0 16px;overflow-x:auto;padding:26px 2px 4px}
+.node{display:flex;flex-direction:column;align-items:flex-start;min-width:0;flex:none}
+.node .d{width:12px;height:12px;border-radius:50%;border:3px solid var(--text);background:var(--surface)}
+.node .d.end{background:var(--brand);border-color:var(--brand)}
+.node b{font-size:14px;margin-top:8px;white-space:nowrap}
+.node small{font-size:12px;color:var(--text-3)}
+.leg{flex:1;min-width:70px;height:3px;margin:0 8px;align-self:flex-start;margin-top:5px;border-radius:3px;background:var(--brand);position:relative}
+.leg.dh{background:repeating-linear-gradient(90deg,var(--border-strong) 0 6px,transparent 6px 11px);flex:.35;min-width:40px}
+.leg span{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:11.5px;color:var(--text-3);white-space:nowrap}
+.cnums{display:flex;gap:24px;flex-wrap:wrap}
+.cnums div small{display:block;font-size:12px;color:var(--text-3)}
+.cnums div b{font-size:17px;letter-spacing:-.02em}
+.cnums .g{color:var(--brand)}
+.insight{display:flex;gap:10px;align-items:flex-start;padding:14px 18px;margin:0;border-bottom:1px solid var(--border);background:var(--brand-soft);
+  color:var(--brand-ink);font-size:13.5px;border-radius:var(--radius) var(--radius) 0 0}
+
+/* Table */
+.tablecard{overflow:hidden;margin-top:16px}
+.tablecard .ct{padding:20px 24px 0}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3);text-align:right;padding:14px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:14px 16px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+th:nth-child(-n+2),td:nth-child(-n+2){text-align:left}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.sel{background:var(--brand-soft)}
+tbody tr:last-child td{border-bottom:0}
+.rk{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--surface-2);font-weight:700;font-size:12.5px}
+tr.sel .rk,tr:first-child .rk{background:var(--brand);color:var(--surface)}
+.lanecell b{display:block;font-weight:600}
+.lanecell small{color:var(--text-3);font-size:12.5px}
+.pos{color:var(--brand);font-weight:700}.negc{color:var(--neg);font-weight:700}
+.mini{display:inline-block;width:52px;height:6px;border-radius:99px;background:var(--surface-3);vertical-align:middle;margin-left:8px;overflow:hidden}
+.mini i{display:block;height:100%;background:var(--brand);border-radius:99px}
+.locked{position:relative}
+.locked .ghost td{filter:blur(5px);opacity:.55;user-select:none;pointer-events:none}
+.unlock{position:absolute;left:0;right:0;bottom:0;top:var(--lock-top,0);display:grid;place-items:center;background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 40%,transparent),var(--surface) 55%)}
+.unlock .box{text-align:center;padding:20px}
+.unlock h4{margin:10px 0 4px;font-size:17px;letter-spacing:-.02em}
+.unlock p{margin:0 0 14px;color:var(--text-2);font-size:14px}
+.lockic{width:40px;height:40px;border-radius:12px;display:inline-grid;place-items:center;background:var(--brand-soft);color:var(--brand)}
+
+/* Teaser / empty / error */
+.teaser{display:flex;align-items:center;gap:18px;padding:22px 24px;flex-wrap:wrap}
+.teaser .tx{flex:1;min-width:240px}
+.teaser h4{margin:0 0 4px;font-size:16px;letter-spacing:-.01em}
+.teaser p{margin:0;color:var(--text-2);font-size:14px}
+.teaser .val{font-size:28px;font-weight:800;letter-spacing:-.03em;color:var(--brand)}
+.teaser .blur{filter:blur(6px);user-select:none}
+.empty{padding:48px 24px;text-align:center}
+.empty h3{margin:12px 0 6px;font-size:18px}
+.empty p{margin:0 auto;color:var(--text-2);max-width:460px}
+.empty .ic{width:48px;height:48px;border-radius:14px;display:inline-grid;place-items:center;background:var(--surface-2);color:var(--text-2)}
+
+/* Skeleton */
+.sk{border-radius:12px;background:linear-gradient(90deg,var(--surface-2) 0%,var(--surface-3) 50%,var(--surface-2) 100%);background-size:200% 100%;animation:sh 1.3s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* Markets */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.mk{padding:20px;transition:transform .15s,box-shadow .15s}
+.mk:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.mk .top{display:flex;justify-content:space-between;align-items:center}
+.mk h3{margin:10px 0 14px;font-size:17px;letter-spacing:-.02em}
+.mk .score{font-size:13px;font-weight:700;color:var(--brand)}
+.mk .rows{display:grid;gap:8px;font-size:13px;color:var(--text-2)}
+.mk .rows div{display:flex;justify-content:space-between}
+.mk .rows b{color:var(--text)}
+.formula{font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2);padding:12px 16px;border-radius:12px;background:var(--surface-2);margin-bottom:16px;overflow-x:auto}
+
+/* Pricing */
+.ptitle{text-align:center;padding:56px 0 8px}
+.ptitle h2{font-size:clamp(30px,4vw,44px);letter-spacing:-.035em;margin:14px 0 10px;line-height:1.08}
+.ptitle p{color:var(--text-2);max-width:560px;margin:0 auto;font-size:17px}
+.roi{max-width:680px;margin:24px auto 0;text-align:center;padding:14px 18px;font-size:14.5px;color:var(--text-2)}
+.roi b{color:var(--brand)}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px;align-items:stretch}
+.tier{padding:28px;display:flex;flex-direction:column;gap:16px;position:relative}
+.tier.hot{border:1.5px solid var(--brand);box-shadow:var(--shadow-lg)}
+.tier .flag{position:absolute;top:-12px;left:28px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--brand);color:var(--surface)}
+.tier h3{margin:0;font-size:16px}
+.tier .desc{color:var(--text-2);font-size:14px;margin:-8px 0 0}
+.price{display:flex;align-items:baseline;gap:6px}
+.price b{font-size:44px;letter-spacing:-.04em;font-weight:800}
+.price small{color:var(--text-2);font-size:14px}
+.tier ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;flex:1}
+.tier li{display:flex;gap:10px;font-size:14px;color:var(--text-2)}
+.tier li svg{color:var(--brand);margin-top:2px}
+.compare-note{text-align:center;color:var(--text-3);font-size:13px;margin-top:20px}
+
+/* Modal + toast */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(10,13,18,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:grid;place-items:center;padding:20px;animation:fade .2s ease both}
+@keyframes fade{from{opacity:0}}
+.sheet{width:100%;max-width:440px;padding:28px;border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-lg);
+  animation:pop .28s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.97)}}
+.sheet h3{margin:14px 0 6px;font-size:21px;letter-spacing:-.025em}
+.sheet p{margin:0 0 20px;color:var(--text-2);line-height:1.55;font-size:14.5px}
+.sheet .in{width:100%;height:46px;border-radius:12px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);padding:0 14px;font:inherit;font-size:15px;outline:none;transition:.15s}
+.sheet .in:focus{border-color:var(--brand);box-shadow:var(--ring)}
+.sheet .acts{display:flex;gap:10px;margin-top:14px}
+.sheet .acts .btn{flex:1;height:46px}
+.sheet .msg{font-size:13px;margin-top:12px;min-height:18px;color:var(--neg)}
+.sheet .msg.ok{color:var(--brand)}
+.sheet code{display:block;margin-top:4px;padding:12px;border-radius:10px;background:var(--surface-2);font-size:12.5px;word-break:break-all}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:70;padding:12px 18px;border-radius:12px;background:var(--text);color:var(--bg);
+  font-size:14px;font-weight:500;box-shadow:var(--shadow-lg);animation:pop .3s cubic-bezier(.2,.9,.3,1.2) both}
+
+footer{border-top:1px solid var(--border);padding:28px 0;color:var(--text-3);font-size:13px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+@media (max-width:980px){
+  .verdict{grid-template-columns:1fr}
+  .v-side{border-left:0;border-top:1px solid var(--border)}
+  .tiers{grid-template-columns:1fr;max-width:480px;margin-left:auto;margin-right:auto}
+}
+@media (max-width:820px){
+  .row{flex-direction:column}
+  .field+.field{border-left:0;border-top:1px solid var(--border)}
+  .go{padding:8px}.go .btn{width:100%}
+  .grid2{grid-template-columns:1fr}
+  .quota,.found .t{display:none}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  /* backdrop-filter would make the fixed tab bar position relative to the header */
+  .nav{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
+  .nav .wrap{gap:12px}
+  .links{position:fixed;bottom:0;left:0;right:0;z-index:40;justify-content:space-around;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    background:var(--nav);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border)}
+  .links button{flex:1}
+  .hero{padding:32px 0 8px}
+  .v-main,.v-side,.pad{padding:20px}
+  .kv{grid-template-columns:1fr 1fr}
+  .navr .btn.brand span{display:none}
+  main{padding-bottom:120px}
+  .hide-sm{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+<script src="static-shim.js"></script>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#" onclick="go('board');return false" aria-label="ProfitLane home">
+      <span class="mark"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 25 L16 7 L25 25"/><path d="M16 17v8" stroke-dasharray="2 4"/></svg></span>
+      ProfitLane
+    </a>
+    <nav class="links" aria-label="Primary">
+      <button data-view="board" aria-current="page" onclick="go('board')">Load board</button>
+      <button data-view="markets" onclick="go('markets')">Markets</button>
+      <button data-view="pricing" onclick="go('pricing')">Pricing</button>
+    </nav>
+    <div class="navr" id="acct"></div>
+  </div>
+</header>
+
+<main>
+<!-- ============ BOARD ============ -->
+<section id="v-board">
+  <div class="wrap">
+    <div class="hero">
+      <span class="pill"><span class="dot">New</span> Profit Chain plans your next two loads</span>
+      <h1>Find the load that <em>actually pays you.</em></h1>
+      <p>Most boards rank by what a load pays. ProfitLane ranks by what you keep, after fuel, empty miles and the drive out of where it drops you.</p>
+
+      <form class="search" id="search" onsubmit="event.preventDefault();run()">
+        <div class="modes" role="tablist">
+          <button type="button" role="tab" id="mode-form" aria-selected="true" onclick="setSearchMode('form')">
+            <svg class="i sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search</button>
+          <button type="button" role="tab" id="mode-ask" aria-selected="false" onclick="setSearchMode('ask')">
+            <svg class="i sm" viewBox="0 0 24 24"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>Ask AI</button>
+        </div>
+
+        <div class="row" id="row-form">
+          <div class="field f-loc">
+            <label for="loc">Truck is in</label>
+            <input type="text" id="loc" list="cities" value="Dallas, TX" autocomplete="off" spellcheck="false"/>
+            <datalist id="cities"></datalist>
+          </div>
+          <div class="field f-eq">
+            <label>Equipment</label>
+            <div class="seg" id="eq" role="group" aria-label="Equipment">
+              <button type="button" aria-pressed="true">Dry Van</button>
+              <button type="button" aria-pressed="false">Reefer</button>
+              <button type="button" aria-pressed="false">Flatbed</button>
+              <button type="button" aria-pressed="false">Step Deck</button>
+            </div>
+          </div>
+          <div class="field f-rad">
+            <label for="rad">Pickup within</label>
+            <div class="radius"><input type="range" id="rad" min="50" max="600" step="25" value="250" oninput="$('radv').textContent=this.value+' mi'"/><b id="radv">250 mi</b></div>
+          </div>
+          <div class="go"><button class="btn primary lg" id="go" type="submit">Find loads
+            <svg class="i sm" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+        </div>
+
+        <div class="row hide" id="row-ask">
+          <div class="ask">
+            <svg class="i" viewBox="0 0 24 24"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z"/></svg>
+            <input id="q" type="text" placeholder="“I'm in Memphis with a reefer. What should I haul?”" autocomplete="off"/>
+          </div>
+          <div class="go"><button class="btn primary lg" type="submit">Ask
+            <svg class="i sm" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+        </div>
+
+        <div class="prefs">
+          <div class="who">I run
+            <div class="tog" role="group" aria-label="Accounting model">
+              <button type="button" id="m-fleet" aria-pressed="true" onclick="setMode('fleet')" title="Driver pay is a cost">a fleet</button>
+              <button type="button" id="m-owner" aria-pressed="false" onclick="setMode('owner')" title="Driver pay is your take-home">my own truck</button>
+            </div>
+          </div>
+          <button type="button" class="switch" id="hsw" role="switch" aria-checked="true" onclick="toggleHide()"><i></i>Hide money-losing loads</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="results" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- ============ MARKETS ============ -->
+<section id="v-markets" class="hide">
+  <div class="wrap">
+    <div class="ptitle">
+      <span class="pill"><span class="dot">Data</span> From 100,000 posted loads</span>
+      <h2>Where trucks earn the most.</h2>
+      <p>The ten best markets to base a truck: lots of outbound freight, easy to leave, and strong rates.</p>
+    </div>
+    <div class="formula" id="formula"></div>
+    <div class="mgrid" id="markets"></div>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section id="v-pricing" class="hide">
+  <div class="wrap">
+    <div class="ptitle">
+      <span class="pill"><span class="dot">Simple</span> Cancel anytime</span>
+      <h2>Pays for itself on the first load.</h2>
+      <p>One better load is usually worth hundreds of dollars. Pro costs less than a tank of fuel.</p>
+    </div>
+    <div class="card roi" id="roi"></div>
+    <div class="tiers" id="tiers"></div>
+    <p class="compare-note">For reference: DAT One carrier plans start at $59/month with no free plan.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© ProfitLane · See what you actually keep.</span>
+    <span>Every dollar is computed by deterministic code. AI only writes the summary.</span>
+  </div>
+</footer>
+
+<div id="modal" class="scrim hide" onclick="if(event.target===this)closeModal()" role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <div class="sheet">
+    <span class="lockic" id="m-ic"></span>
+    <h3 id="m-title"></h3>
+    <p id="m-body"></p>
+    <form onsubmit="event.preventDefault();modalSubmit()">
+      <input class="in" id="m-email" type="email" placeholder="you@yourcarrier.com" autocomplete="email"/>
+      <div id="m-extra"></div>
+      <div class="acts">
+        <button type="button" class="btn" onclick="closeModal()">Not now</button>
+        <button type="submit" class="btn brand" id="m-go">Continue</button>
+      </div>
+      <div class="msg" id="m-msg"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const money=n=>n==null?'—':(n<0?'−':'')+'$'+Math.abs(Math.round(n)).toLocaleString();
+const money2=n=>n==null?'—':'$'+Number(n).toFixed(2);
+const num=n=>n==null?'—':Math.round(n).toLocaleString();
+const pct=n=>n==null?'—':Math.round(n)+'%';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const date=s=>{ if(!s) return '—'; const d=new Date(s+'T12:00:00'); return isNaN(d)?s:d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); };
+const I={
+  arrow:'<svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  lock:'<svg class="i" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  star:'<svg class="i sm" viewBox="0 0 24 24"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
+  spark:'<svg class="i sm" viewBox="0 0 24 24"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z"/></svg>',
+  cash:'<svg class="i" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>',
+  fuel:'<svg class="i" viewBox="0 0 24 24"><path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M14 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M7 7h4"/></svg>',
+  ext:'<svg class="i sm" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>',
+  check:'<svg class="i sm" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>',
+  truck:'<svg class="i" viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>',
+  map:'<svg class="i" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>',
+  link:'<svg class="i" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+  sun:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  moon:'<svg class="i" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
+  key:'<svg class="i" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3"/></svg>',
+  user:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+};
+function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3200); }
+function countUp(el,to,fmt){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ el.textContent=fmt(to); return; }
+  const t0=performance.now(), d=900;
+  const step=t=>{ const p=Math.min(1,(t-t0)/d), e=1-Math.pow(1-p,3); el.textContent=fmt(to*e); if(p<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+/* =========================================================
+   State
+   ========================================================= */
+const state={mode:'fleet', hide:true, search:'form', eq:'Dry Van', data:null, sel:null, me:null, plans:null, modal:null};
+const F=()=>state.mode==='fleet'
+  ? {net:'net_profit',npm:'net_per_mile',mar:'fleet_margin_pct',cost:'total_cost',driverIsCost:true,keepWord:'Net profit'}
+  : {net:'owner_net_profit',npm:'owner_net_per_mile',mar:'owner_margin_pct',cost:'operating_cost',driverIsCost:false,keepWord:'Take-home'};
+
+/* ---------- theme ---------- */
+function applyTheme(t){ if(t) document.documentElement.dataset.theme=t; else delete document.documentElement.dataset.theme; }
+function isDark(){ const t=document.documentElement.dataset.theme; return t? t==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
+function toggleTheme(){ const t=isDark()?'light':'dark'; applyTheme(t); store('pl-theme',t); renderAcct(); }
+applyTheme(store('pl-theme'));
+
+/* ---------- views ---------- */
+function go(v){
+  ['board','markets','pricing'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
+  document.querySelectorAll('.links button').forEach(b=>b.toggleAttribute('aria-current',b.dataset.view===v));
+  document.querySelectorAll('.links button[aria-current]').forEach(b=>b.setAttribute('aria-current','page'));
+  if(v==='markets'&&!state.mk) loadMarkets();
+  if(v==='pricing') renderPricing();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------- search controls ---------- */
+function setSearchMode(m){
+  state.search=m;
+  $('mode-form').setAttribute('aria-selected',m==='form'); $('mode-ask').setAttribute('aria-selected',m==='ask');
+  $('row-form').classList.toggle('hide',m!=='form'); $('row-ask').classList.toggle('hide',m!=='ask');
+  (m==='ask'?$('q'):$('loc')).focus();
+}
+document.querySelectorAll('#eq button').forEach(b=>b.onclick=()=>{
+  state.eq=b.textContent;
+  document.querySelectorAll('#eq button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+});
+function setEq(e){ document.querySelectorAll('#eq button').forEach(x=>{ const on=x.textContent===e; x.setAttribute('aria-pressed',on); if(on) state.eq=e; }); }
+function setMode(m){
+  state.mode=m;
+  $('m-fleet').setAttribute('aria-pressed',m==='fleet'); $('m-owner').setAttribute('aria-pressed',m==='owner');
+  if(state.data) render(state.data,false);
+}
+function toggleHide(){ state.hide=!state.hide; $('hsw').setAttribute('aria-checked',state.hide); }
+
+/* =========================================================
+   Account
+   ========================================================= */
+async function loadMe(){ try{ state.me=await(await fetch('/api/me')).json(); }catch(e){ state.me=null; } renderAcct(); }
+function renderAcct(){
+  const m=state.me, p=[];
+  if(m){
+    if(m.signed_in && m.money_found>0) p.push(`<span class="found">${I.spark}<span class="t">Found you</span> <b>${money(m.money_found)}</b></span>`);
+    if(m.searches_left!=null) p.push(`<span class="quota">${m.searches_left} free ${m.searches_left===1?'search':'searches'} left</span>`);
+    p.push(`<span class="plan ${m.plan!=='free'?'paid':''}">${esc(m.plan)}</span>`);
+    if(m.api_key) p.push(`<button class="iconbtn" title="API key" aria-label="API key" onclick="openModal('api')">${I.key}</button>`);
+    if(!m.signed_in) p.push(`<button class="btn ghost hide-sm" onclick="openModal('signup')">Sign up</button>`);
+  }
+  p.push(`<button class="iconbtn" aria-label="Toggle theme" title="Toggle theme" onclick="toggleTheme()">${isDark()?I.sun:I.moon}</button>`);
+  if(!m||m.plan==='free') p.push(`<button class="btn brand" onclick="upgrade('pro')">${I.spark}<span>Upgrade</span></button>`);
+  $('acct').innerHTML=p.join('');
+}
+function upgrade(plan){
+  const m=state.me||{};
+  if(!m.signed_in){ openModal('signup',plan); return; }
+  if(m.checkout&&m.checkout[plan]){ location.href='/api/checkout/'+plan; return; }
+  openModal('lead',plan);
+}
+const MODALS={
+  signup:p=>({ic:I.user,t:p?'Start with your email':'Create your free account',
+    b:p?`Next step is checkout for <b>${esc(p[0].toUpperCase()+p.slice(1))}</b>. No password needed.`:'Track every dollar ProfitLane finds you compared with the highest-paying load.',go:'Continue'}),
+  lead:p=>({ic:I.spark,t:`Get ${esc((p||'pro')[0].toUpperCase()+(p||'pro').slice(1))} access`,
+    b:'We are onboarding carriers personally right now. Leave your email and we will switch it on within 24 hours.',go:'Request access'}),
+  limit:()=>({ic:I.lock,t:"You've used today's free searches",b:'Pro is unlimited, shows the full ranked board, and plans your next two loads.',go:'Upgrade to Pro',noEmail:true}),
+  api:()=>({ic:I.key,t:'Your Fleet API key',b:'Send <b>POST /v1/recommend</b> with the header <b>Authorization: Bearer &lt;key&gt;</b>. Same JSON as the board.',go:'Done',noEmail:true,extra:true}),
+};
+function openModal(kind,plan){
+  state.modal={kind,plan};
+  const c=MODALS[kind](plan);
+  $('m-ic').innerHTML=c.ic; $('m-title').textContent=c.t; $('m-body').innerHTML=c.b; $('m-go').textContent=c.go;
+  $('m-msg').textContent=''; $('m-msg').className='msg';
+  $('m-email').classList.toggle('hide',!!c.noEmail);
+  $('m-extra').innerHTML=c.extra&&state.me?`<code>${esc(state.me.api_key)}</code>`:'';
+  $('m-email').value=(state.me&&state.me.email)||'';
+  $('modal').classList.remove('hide');
+  if(!c.noEmail) setTimeout(()=>$('m-email').focus(),50);
+}
+function closeModal(){ $('modal').classList.add('hide'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+async function modalSubmit(){
+  const {kind,plan}=state.modal||{}; const email=$('m-email').value.trim();
+  if(kind==='api'){ closeModal(); return; }
+  if(kind==='limit'){ closeModal(); upgrade('pro'); return; }
+  $('m-go').disabled=true;
+  try{
+    const r=await fetch(kind==='signup'?'/api/signup':'/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,plan:plan||null,source:kind})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){ $('m-msg').textContent=d.message||(d.error==='invalid_email'?'Please enter a valid email.':'Something went wrong. Try again.'); return; }
+    if(kind==='lead'){ closeModal(); toast("You're on the list. We'll email you within 24 hours."); return; }
+    closeModal(); await loadMe(); toast('Account created');
+    if(plan) upgrade(plan);
+  } finally { $('m-go').disabled=false; }
+}
+
+/* =========================================================
+   Search
+   ========================================================= */
+function skeleton(){
+  return `<div class="head"><div><div class="sk" style="width:260px;height:26px"></div><div class="sk" style="width:200px;height:16px;margin-top:10px"></div></div></div>
+    <div class="card verdict"><div class="v-main"><div class="sk" style="width:140px;height:14px"></div><div class="sk" style="width:70%;height:32px;margin:16px 0"></div>
+    <div class="sk" style="width:220px;height:56px"></div><div class="sk" style="width:90%;height:28px;margin-top:22px"></div></div>
+    <div class="v-side"><div class="sk" style="height:18px;width:60%"></div><div class="sk" style="height:72px"></div><div class="sk" style="height:72px"></div></div></div>
+    <div class="grid2"><div class="card pad"><div class="sk" style="height:180px"></div></div><div class="card pad"><div class="sk" style="height:180px"></div></div></div>`;
+}
+
+async function run(){
+  const ask=state.search==='ask';
+  const q=$('q').value.trim();
+  if(ask && !q){ $('q').focus(); return; }
+  $('go').disabled=true;
+  $('results').innerHTML=skeleton();
+  try{
+    const body=ask
+      ? {query:q, pickup_radius:Number($('rad').value), hide_unprofitable:state.hide}
+      : {location:$('loc').value.trim(), equipment:state.eq, pickup_radius:Number($('rad').value), hide_unprofitable:state.hide};
+    const r=await fetch('/api/recommend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(r.status===402){ $('results').innerHTML=limitCard(); openModal('limit'); await loadMe(); return; }
+    if(d.me){ state.me=d.me; renderAcct(); }
+    if(ask && d.parsed){ $('loc').value=d.parsed.location; setEq(d.parsed.equipment); }
+    state.data=d; state.sel=null;
+    render(d,true);
+  }catch(e){
+    $('results').innerHTML=`<div class="card empty reveal"><span class="ic">${I.truck}</span><h3>Something went wrong</h3><p>${esc(e.message||e)}</p></div>`;
+  }finally{ $('go').disabled=false; }
+}
+
+function limitCard(){
+  return `<div class="card teaser reveal" style="margin-top:40px"><span class="lockic">${I.lock}</span>
+    <div class="tx"><h4>You've used today's free searches</h4><p>Come back tomorrow, or go unlimited with Pro.</p></div>
+    <button class="btn brand" onclick="upgrade('pro')">Upgrade to Pro</button></div>`;
+}
+
+/* =========================================================
+   Render
+   ========================================================= */
+function render(d,animate){
+  const f=F(), loads=d.top_loads||[];
+  const where=esc(d.parsed?.location||$('loc').value), eq=esc(d.parsed?.equipment||state.eq);
+  if(!loads.length){
+    $('results').innerHTML=`<div class="card empty reveal" style="margin-top:40px"><span class="ic">${I.map}</span>
+      <h3>${d.location_resolved===false?`We couldn't find “${where}”`:'No profitable loads in range'}</h3>
+      <p>${d.location_resolved===false?'Try a city and state, like “Memphis, TN”.':`Nothing within ${num(d.stats?.radius)} mi of ${where} makes money after costs. Try a wider pickup radius, or show money-losing loads.`}</p></div>`;
+    return;
+  }
+  const st=d.stats, best=d.best||loads[0], alt=d.highest_gross;
+  const sel=state.sel||best;
+  let h='';
+  h+=`<div class="head reveal"><div><h2>Best ${eq} loads near ${where}</h2>
+      <p>${num(st.total_candidates)} loads scanned. Ranked by ${state.mode==='fleet'?'net profit':'your take-home'}.</p></div>
+    <div class="stats"><span class="stat"><b>${num(st.in_radius)}</b>in range</span>
+      <span class="stat good"><b>${num(st.profitable)}</b>profitable</span>
+      ${st.hidden_unprofitable?`<span class="stat"><b>${num(st.hidden_unprofitable)}</b>money-losers hidden</span>`:''}</div></div>`;
+  h+=verdict(best,alt);
+  h+=`<div class="grid2 reveal" id="detail" style="animation-delay:.08s">${detail(sel,best)}</div>`;
+  if(d.explanation) h+=`<div class="card ai reveal" style="animation-delay:.12s"><span class="ic">${I.spark}</span>
+      <div><small>AI summary · numbers come from the cost engine</small><p>${esc(d.explanation)}</p></div></div>`;
+  h+=offers(d.offers,best);
+  h+=chains(d.chains);
+  h+=table(loads,d.locked,sel);
+  $('results').innerHTML=h;
+  const g=document.querySelector('tr.ghost'), u=document.querySelector('.unlock');
+  if(g&&u) u.style.setProperty('--lock-top',g.offsetTop+'px');
+  if(animate){
+    const el=$('keepnum'); if(el) countUp(el,best[f.net],money);
+  }
+}
+
+function verdict(L,alt){
+  const f=F(), net=L[f.net], mar=L[f.mar];
+  const two=alt&&alt.id!==L.id;
+  const max=Math.max(L.gross_revenue,two?alt.gross_revenue:0,1);
+  const item=(x,label)=>{
+    const k=x[f.net];
+    return `<div class="cmp-item"><div class="nm">${label}<span>${esc(x.origin)} → ${esc(x.destination)}</span></div>
+      <div class="bars">
+        <div class="barrow"><span>Pays</span><div class="track"><i class="pay" style="width:${x.gross_revenue/max*100}%"></i></div><span class="v">${money(x.gross_revenue)}</span></div>
+        <div class="barrow"><span>You keep</span><div class="track"><i class="keep ${k<0?'neg':''}" style="width:${Math.max(0,k)/max*100}%"></i></div><span class="v">${money(k)}</span></div>
+      </div></div>`;
+  };
+  let side;
+  if(two){
+    const dNet=net-alt[f.net], dGross=alt.gross_revenue-L.gross_revenue;
+    side=`<p class="cmp-title">Why not the highest-paying load?<small>Because paying more doesn't mean keeping more.</small></p>
+      <div class="cmp">${item(L,'Our pick')}${item(alt,'Highest pay')}</div>
+      <div class="callout">It pays <b>${money(dGross)} more</b>, but you'd keep <span class="g">${money(dNet)} less</span>.
+        It drops you in a weaker market (${alt.destination_score.toFixed(2)} vs ${L.destination_score.toFixed(2)}),
+        so expect about <b>${num(alt.expected_deadhead_out-L.expected_deadhead_out)} more empty miles</b> to find the next load.</div>`;
+  } else {
+    side=`<p class="cmp-title">Also the highest-paying load<small>Nothing in range pays more and keeps more.</small></p>
+      <div class="cmp">${item(L,'Our pick')}</div>
+      <div class="callout">This load leads the board on both pay and profit for your filters.</div>`;
+  }
+  return `<div class="card verdict reveal">
+    <div class="v-main">
+      <span class="eyebrow good">${I.star} Best load for you</span>
+      <div class="lane">${esc(L.origin)} <span class="arrow">${I.arrow}</span> ${esc(L.destination)}</div>
+      <div class="keeprow"><span class="lbl">${f.driverIsCost?'You keep':'You take home'}</span>
+        <span class="big ${net<0?'neg':''}" id="keepnum">${money(net)}</span>
+        <span class="badge ${mar<0?'neg':''}">${pct(mar)} margin</span></div>
+      <div class="facts">
+        <span class="chip">Pays <b>${money(L.gross_revenue)}</b></span>
+        <span class="chip"><b>${num(L.miles)}</b> loaded mi</span>
+        <span class="chip"><b>${money2(L.rate_per_mile)}</b>/mi rate</span>
+        <span class="chip"><b>${money2(L[f.npm])}</b>/mi kept</span>
+        <span class="chip">Pickup <b>${date(L.pickup_date)}</b></span>
+        <span class="chip">${esc(L.id)}</span>
+      </div>
+    </div>
+    <div class="v-side">${side}</div>
+  </div>`;
+}
+
+function detail(L,best){
+  const f=F(), g=Math.max(L.gross_revenue,1), keep=L[f.net];
+  const parts=[['Fuel','--c-fuel',L.fuel_cost]];
+  if(f.driverIsCost) parts.push(['Driver pay','--c-driver',L.driver_pay]);
+  parts.push(['Maintenance','--c-maint',L.maintenance],['Insurance','--c-ins',L.insurance],['Tolls','--c-toll',L.tolls]);
+  const costTotal=L[f.cost];
+  const denom=Math.max(g,costTotal);
+  const bar=parts.map(([n,c,v],i)=>`<i style="width:${v/denom*100}%;background:var(${c});animation-delay:${i*.05}s" title="${n} ${money(v)}"></i>`).join('')
+    +(keep>0?`<i style="width:${keep/denom*100}%;background:var(--brand);animation-delay:.3s" title="Kept ${money(keep)}"></i>`:'');
+  const leg=parts.map(([n,c,v])=>`<div class="lgd"><span class="sw" style="background:var(${c})"></span><span>${n}</span><span class="v">${money(v)}</span><span class="p">${pct(v/g*100)}</span></div>`).join('');
+  const label=L.id===best.id?'Best load':`${esc(L.origin)} → ${esc(L.destination)}`;
+  const t=Math.max(L.total_miles,1);
+  const seg=(c,v,lbl)=>v>0?`<div class="${c}" style="flex:${v/t}" title="${lbl}">${v/t>.14?num(v)+' mi':''}</div>`:'';
+  const s=L.destination_score, sw=s>=.6?'strong':s>=.35?'average':'weak';
+  return `<div class="card pad">
+      <div class="ct"><h3>Where the money goes</h3><span>${label}</span></div>
+      <div class="stack" role="img" aria-label="Cost breakdown">${bar}</div>
+      <div class="legend">${leg}
+        <div class="lgd total"><span class="sw" style="background:var(--brand)"></span><span>${f.keepWord}</span><span class="v" style="color:${keep<0?'var(--neg)':'var(--brand)'}">${money(keep)}</span><span class="p">${pct(keep/g*100)}</span></div>
+      </div>
+    </div>
+    <div class="card pad">
+      <div class="ct"><h3>The whole trip</h3><span>${num(L.total_miles)} mi · ${L.estimated_days} days</span></div>
+      <div class="route" role="img" aria-label="Trip miles">
+        ${seg('r-in',L.deadhead_in_miles,'Empty to pickup')}${seg('r-load',L.loaded_miles,'Loaded')}${seg('r-out',L.deadhead_out_miles,'Expected empty after')}</div>
+      <div class="rlegend"><span><i class="r-in"></i>Empty to pickup · ${num(L.deadhead_in_miles)} mi</span>
+        <span><i class="r-load"></i>Loaded · ${num(L.loaded_miles)} mi</span>
+        <span><i class="r-out"></i>Empty after · ~${num(L.deadhead_out_miles)} mi</span></div>
+      <div class="gauge"><div class="top"><span>Drop-off market: <b>${esc(L.destination)}</b></span><b>${sw} · ${s.toFixed(2)}</b></div>
+        <div class="gtrack"><i style="left:${Math.min(100,Math.max(0,s*100))}%"></i></div></div>
+      <div class="kv"><div><small>Pays per mile</small><b>${money2(L.rate_per_mile)}</b></div>
+        <div><small>Kept per mile</small><b>${money2(L[f.npm])}</b></div>
+        <div><small>Total cost</small><b>${money(costTotal)}</b></div></div>
+    </div>`;
+}
+
+function offers(o,L){
+  if(!o||!L||(!o.factoring&&!o.fuel)) return '';
+  let h='<div class="offers reveal" style="animation-delay:.16s">';
+  if(o.factoring) h+=`<a class="card offer" href="/go/factoring?load=${encodeURIComponent(L.id)}" target="_blank" rel="noopener">
+      <span class="ic" style="background:var(--brand-soft);color:var(--brand)">${I.cash}</span>
+      <div><div class="t">Get paid in 24 hours</div><div class="s">Factor this ${money(L.gross_revenue)} load instead of waiting 30 to 60 days.</div></div>
+      <span class="go2">${I.ext}</span></a>`;
+  if(o.fuel) h+=`<a class="card offer" href="/go/fuel?load=${encodeURIComponent(L.id)}" target="_blank" rel="noopener">
+      <span class="ic" style="background:var(--warn-soft);color:var(--warn)">${I.fuel}</span>
+      <div><div class="t">Save about ${money(o.fuel.savings)} on fuel</div><div class="s">~${num(o.fuel.gallons)} gallons this trip, at an estimated ${money2(o.fuel.per_gallon)}/gal off.</div></div>
+      <span class="go2">${I.ext}</span></a>`;
+  return h+'</div>';
+}
+
+function chains(c){
+  if(!c) return '';
+  const head=`<div class="head"><div><h2>Profit Chain</h2><p>Your next two loads, planned together, so you never guess the empty drive.</p></div></div>`;
+  if(!c.count) return head+`<div class="card empty"><span class="ic">${I.link}</span><h3>No follow-on load posted yet</h3>
+    <p>Your best loads deliver after the freight currently on the board. ProfitLane only chains real posted loads, so check again after pickup.</p></div>`;
+  if(c.locked) return head+`<div class="card teaser">
+      <span class="lockic">${I.link}</span>
+      <div class="tx"><h4>We planned ${c.count} two-load ${c.count===1?'run':'runs'} from here</h4>
+        <p>${c.first_leg_differs?'The best one <b>does not start with the #1 load above</b>. ':''}See which loads, in which order, with Pro.</p></div>
+      <div style="text-align:right"><div class="val">${money(c.best_net)}</div><small style="color:var(--text-3)">${money(c.best_net_per_day)} per day</small></div>
+      <button class="btn brand" onclick="upgrade('pro')">See the plan</button></div>`;
+  const own=state.mode!=='fleet';
+  let h=head+'<div class="card">';
+  if(c.first_leg_differs) h+=`<p class="insight">${I.spark}<span>The best two-load plan <b>doesn't start with your #1 single load</b>. Where load one drops you decides what load two pays.</span></p>`;
+  h+=c.chains.map((ch,i)=>{
+    const a=ch.leg1, b=ch.leg2;
+    return `<div class="chain">
+      <div class="tl">
+        <div class="node"><span class="d"></span><b>${esc(a.origin)}</b><small>Pickup ${date(a.pickup_date)}</small></div>
+        <div class="leg"><span>${num(a.loaded_miles)} mi · ${money(a.gross_revenue)}</span></div>
+        <div class="node"><span class="d"></span><b>${esc(a.destination)}</b><small>Drop</small></div>
+        <div class="leg dh"><span>${num(b.deadhead_in_miles)} mi empty</span></div>
+        <div class="node"><span class="d"></span><b>${esc(b.origin)}</b><small>Pickup ${date(b.pickup_date)}</small></div>
+        <div class="leg"><span>${num(b.loaded_miles)} mi · ${money(b.gross_revenue)}</span></div>
+        <div class="node"><span class="d end"></span><b>${esc(b.destination)}</b><small>Drop</small></div>
+      </div>
+      <div class="cnums">
+        <div><small>${own?'You take home':'You keep'}</small><b class="g">${money(own?ch.owner_net_profit:ch.net_profit)}</b></div>
+        <div><small>Per day</small><b>${money(own?ch.owner_net_per_day:ch.net_per_day)}</b></div>
+        <div><small>Pays</small><b>${money(ch.gross_revenue)}</b></div>
+        <div><small>Empty miles</small><b>${num(ch.empty_miles)}</b></div>
+        <div><small>Days</small><b>${ch.estimated_days}</b></div>
+      </div></div>`;
+  }).join('');
+  return h+'</div>';
+}
+
+function table(rows,locked,sel){
+  const f=F();
+  const sorted=[...rows].sort((a,b)=>b[f.net]-a[f.net]);
+  const body=sorted.map((L,i)=>`<tr data-id="${esc(L.id)}" class="${sel&&sel.id===L.id&&i>0?'sel':''}" onclick="pick('${esc(L.id)}')">
+      <td><span class="rk">${i+1}</span></td>
+      <td class="lanecell"><b>${esc(L.origin)} → ${esc(L.destination)}</b><small>${esc(L.id)} · pickup ${date(L.pickup_date)}</small></td>
+      <td>${money(L.gross_revenue)}</td>
+      <td class="${L[f.net]>=0?'pos':'negc'}">${money(L[f.net])}</td>
+      <td>${money2(L[f.npm])}</td>
+      <td>${pct(L[f.mar])}</td>
+      <td>${L.destination_score.toFixed(2)}<span class="mini"><i style="width:${Math.round(L.destination_score*100)}%"></i></span></td>
+    </tr>`).join('');
+  const ghost=locked?Array.from({length:4},(_,i)=>`<tr class="ghost"><td><span class="rk">${rows.length+i+1}</span></td>
+      <td class="lanecell"><b>Somewhere, ST → Elsewhere, ST</b><small>L-000000 · pickup Jun 15</small></td>
+      <td>$0,000</td><td class="pos">$0,000</td><td>$0.00</td><td>00%</td><td>0.00</td></tr>`).join(''):'';
+  const unlock=locked?`<div class="unlock"><div class="box"><span class="lockic">${I.lock}</span>
+      <h4>${num(locked.count)} more profitable loads near you</h4><p>The best of them keeps <b style="color:var(--brand)">${money(locked.top_net)}</b>. See them all with Pro.</p>
+      <button class="btn brand" onclick="upgrade('pro')">Unlock the full board</button></div></div>`:'';
+  return `<div class="head"><div><h2>All ranked loads</h2><p>Click a load to see where its money goes.</p></div></div>
+    <div class="card tablecard"><div class="tscroll ${locked?'locked':''}"><table>
+      <thead><tr><th>#</th><th>Lane</th><th>Pays</th><th>${f.driverIsCost?'Keeps':'Take-home'}</th><th>Kept/mi</th><th>Margin</th><th>Drop market</th></tr></thead>
+      <tbody>${body}${ghost}</tbody></table>${unlock}</div></div>`;
+}
+
+function pick(id){
+  const d=state.data; if(!d) return;
+  const L=d.top_loads.find(x=>String(x.id)===id); if(!L) return;
+  state.sel=L;
+  $('detail').innerHTML=detail(L,d.best||d.top_loads[0]);
+  document.querySelectorAll('tbody tr[data-id]').forEach((tr,i)=>tr.classList.toggle('sel',tr.dataset.id===id&&i>0));
+  $('detail').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* =========================================================
+   Markets + pricing
+   ========================================================= */
+async function loadMarkets(){
+  $('markets').innerHTML=Array.from({length:6},()=>`<div class="card mk"><div class="sk" style="height:120px"></div></div>`).join('');
+  try{
+    const d=await(await fetch('/api/markets')).json(); state.mk=d; const w=d.weights;
+    $('formula').textContent=`market_score = ${w.outbound_demand} × outbound_demand + ${w.lane_balance} × lane_balance + ${w.rate_level} × rate_level   (each scaled 0–1)`;
+    const mx=Math.max(...d.markets.map(m=>m.market_score));
+    $('markets').innerHTML=d.markets.map((m,i)=>`<div class="card mk reveal" style="animation-delay:${i*.04}s">
+      <div class="top"><span class="rk">${i+1}</span><span class="score">${m.market_score.toFixed(3)}</span></div>
+      <h3>${esc(m.market)}</h3>
+      <div class="track" style="margin-bottom:14px"><i class="keep" style="width:${m.market_score/mx*100}%"></i></div>
+      <div class="rows"><div><span>Outbound loads</span><b>${num(m.outbound_demand)}</b></div>
+        <div><span>Out vs. in balance</span><b>${m.lane_balance.toFixed(2)}×</b></div>
+        <div><span>Average rate</span><b>${money2(m.rate_level)}/mi</b></div></div></div>`).join('');
+  }catch(e){ $('markets').innerHTML=`<div class="card empty"><h3>Couldn't load markets</h3><p>${esc(e)}</p></div>`; }
+}
+
+const TIER_DESC={free:'See the smartest load near you, every day.',pro:'For owner-operators who want every edge.',fleet:'For fleets and dispatch services.'};
+async function renderPricing(){
+  if(!state.plans){ try{ state.plans=(await(await fetch('/api/plans')).json()).plans; }catch(e){ return; } }
+  const d=state.data, b=d&&d.best, a=d&&d.highest_gross;
+  $('roi').innerHTML=(b&&a&&a.id!==b.id)
+    ? `On your last search, ProfitLane's pick kept <b>${money(b.net_profit-a.net_profit)} more</b> than the highest-paying load. Pro is $39 a month.`
+    : `Run a search and we'll show you exactly how much more our pick keeps than the highest-paying load.`;
+  const cur=(state.me&&state.me.plan)||'free';
+  $('tiers').innerHTML=Object.entries(state.plans).map(([k,p])=>`<div class="card tier ${k==='pro'?'hot':''}">
+    ${k==='pro'?'<span class="flag">Most popular</span>':''}
+    <h3>${esc(p.name)}</h3><p class="desc">${TIER_DESC[k]||''}</p>
+    <div class="price"><b>$${p.price}</b><small>/ ${esc(p.per)}${p.min_trucks?` · min ${p.min_trucks}`:''}</small></div>
+    <ul>${p.features.map(x=>`<li>${I.check}<span>${esc(x)}</span></li>`).join('')}</ul>
+    ${k===cur?'<button class="btn" disabled>Your current plan</button>'
+      :k==='free'?'<button class="btn" onclick="go(\'board\')">Start free</button>'
+      :`<button class="btn ${k==='pro'?'brand':'primary'}" onclick="upgrade('${k}')">Get ${esc(p.name)}</button>`}
+  </div>`).join('');
+}
+
+/* =========================================================
+   Boot
+   ========================================================= */
+async function loadCities(){
+  try{ const d=await(await fetch('/api/locations')).json();
+    $('cities').innerHTML=d.locations.map(c=>`<option value="${esc(c)}">`).join(''); }catch(e){}
+}
+window.addEventListener('load',async()=>{ renderAcct(); loadCities(); await loadMe(); run(); });
+</script>
+</body>
+</html>
