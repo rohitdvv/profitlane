@@ -15,8 +15,11 @@ env/
 .env
 .env.local
 
+# Local business DB (accounts, usage, leads)
+*.db
+
 # Provided dataset (read-only, not redistributed) — drop loads_part_*.txt under ./data/
-data/
+/data/
 *.zip
 
 # OS

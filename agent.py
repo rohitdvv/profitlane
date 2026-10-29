@@ -8,7 +8,7 @@ Thin Claude orchestration layer.
 
 - Every single number shown comes from deterministic Python (cost_engine + forward_scorer).
 
-MODEL is pinned to "claude-sonnet-4-6".
+MODEL comes from config (latest Sonnet; override with PROFITLANE_MODEL).
 """
 
 import os
@@ -19,6 +19,7 @@ import anthropic
 from config import MODEL, DEFAULT_EQUIPMENT, PICKUP_RADIUS_MILES, HIDE_UNPROFITABLE, RETURN_TOP_N
 from data_layer import filter_loads, load_all_loads, get_top_markets
 from forward_scorer import recommend_loads
+from chain_planner import plan_chains
 
 # ------------------------------------------------------------------
 # Client
@@ -122,9 +123,10 @@ def get_recommendation(
     force_equipment: Optional[str] = None,
     pickup_radius: Optional[float] = None,
     hide_unprofitable: Optional[bool] = None,
+    with_chains: bool = True,
 ) -> Dict[str, Any]:
     """
-    Main entry point used by UI.
+    Main entry point used by UI and the public API.
 
     The LLM only parses the query and writes prose. All ranking/filtering/cost
     math below is deterministic Python.
@@ -165,10 +167,14 @@ def get_recommendation(
     best = rec.get("best") or (top_loads[0] if top_loads else None)
     highest_gross = rec.get("highest_gross") or best
 
-    # 5. LLM writes ONLY the explanation (grounded in the computed numbers)
+    # 5. Profit Chain: best two-load sequences (deterministic lookahead)
+    chains = plan_chains(top_loads, equipment, radius) if with_chains and top_loads else None
+
+    # 6. LLM writes ONLY the explanation (grounded in the computed numbers)
     explanation = _generate_explanation(parsed, top_loads, top_markets, best, highest_gross, query)
 
     return {
+        "chains": chains,
         "parsed": parsed,
         "location_resolved": rec.get("current_coords") is not None,
         "top_loads": top_loads,
