@@ -18,8 +18,8 @@ plans the next load too. Everything below follows from that.
   free plan ([DAT](https://dat.com/pricing/), [CostBench](https://costbench.com/software/trucking-tms/dat-freight/free-plan/)).
   AI dispatch tools charge $49–$499/mo, or 5% per booked load (Trucker Path dispatch)
   ([Numeo comparison](https://numeo.ai/blog/truckbase-alternatives), [HDT](https://www.truckinginfo.com/news/trucker-path-launches-dispatch-feature-for-small-carriers)).
-- **Fintech pays well for carrier referrals.** Outgo pays $500/truck (up to $2,500 per carrier) or
-  10% of factoring revenue for life ([Outgo](https://outgo.com/affiliate-referral-program)).
+- **Fintech pays well for carrier referrals.** Outgo, now part of DAT, pays a 10% revenue share for the life of a
+  referred carrier's account ([Outgo](https://outgo.dat.com/affiliate-referral-program)).
   Summar pays 10–15% recurring ([Summar](https://summar.com/freight-factoring-referrals)).
   TAFS explicitly lists load boards as eligible partners ([TAFS](https://www.tafs.com/?p=55)).
 - **Voice AI that calls brokers is being sold now** (Numeo, Bubba, HappyRobot), mostly for routine
