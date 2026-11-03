@@ -148,3 +148,16 @@ def test_chain_replaces_guessed_empty_out_with_real_leg():
     assert c["empty_miles"] == 50 + 40 + 100
     assert c["gross_revenue"] == 3900
     assert c["net_per_day"] == round(c["net_profit"] / c["estimated_days"], 2)
+
+
+# ---------------- Location resolution ----------------
+def test_bare_city_resolves(monkeypatch):
+    import data_layer
+    fake = {"Dallas, TX": (32.7767, -96.797), "Fort Worth, TX": (32.7555, -97.3308), "New York, NY": (40.71, -74.0)}
+    monkeypatch.setattr(data_layer, "get_city_coords", lambda: fake)
+    assert data_layer.resolve_location("Dallas") == fake["Dallas, TX"]
+    assert data_layer.resolve_location("fort worth") == fake["Fort Worth, TX"]
+    assert data_layer.resolve_location("New York") == fake["New York, NY"]
+    assert data_layer.resolve_location("Dallas, TX") == fake["Dallas, TX"]
+    assert data_layer.resolve_location("Dallas TX") == fake["Dallas, TX"]
+    assert data_layer.resolve_location("Atlantis") is None

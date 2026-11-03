@@ -232,8 +232,14 @@ def resolve_location(location: str) -> Optional[Tuple[float, float]]:
     """Resolve a city string like 'Dallas, TX' or 'Dallas' to (lat, lon)."""
     if not location:
         return None
-    mkt = normalize_market_name(location)
     coords = get_city_coords()
+    # A bare city ("Dallas", "Fort Worth") has no state to normalize; match the city part.
+    if "," not in location and not re.search(r"\s[A-Za-z]{2}$", location.strip()):
+        city = location.strip().lower()
+        for k, v in coords.items():
+            if k and k.split(",")[0].strip().lower() == city:
+                return v
+    mkt = normalize_market_name(location)
     if mkt in coords:
         return coords[mkt]
     # fuzzy: contains
