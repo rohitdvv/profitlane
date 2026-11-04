@@ -333,6 +333,56 @@ tr.sel .rk,tr:first-child .rk{background:var(--brand);color:var(--surface)}
 .sk{border-radius:12px;background:linear-gradient(90deg,var(--surface-2) 0%,var(--surface-3) 50%,var(--surface-2) 100%);background-size:200% 100%;animation:sh 1.3s linear infinite}
 @keyframes sh{to{background-position:-200% 0}}
 
+/* Sample-data notice */
+.notice{display:flex;gap:10px;align-items:flex-start;max-width:980px;margin:18px auto 0;padding:12px 16px;border-radius:12px;text-align:left;
+  background:var(--warn-soft);color:var(--warn);font-size:14px;line-height:1.5}
+.notice b{font-weight:700}
+
+/* Check a load */
+.chk-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;margin-top:8px}
+#check-out{min-width:0}
+#check-out .grid2{grid-template-columns:1fr}
+.check{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);padding:16px;text-align:left}
+.check textarea{display:block;width:100%;min-height:112px;resize:vertical;border:1px solid var(--border);border-radius:14px;background:var(--surface);color:var(--text);
+  font:inherit;font-size:15.5px;line-height:1.5;padding:14px 16px;outline:none;transition:.15s}
+.check textarea:focus,.fgrid input:focus,.costs input:focus{border-color:var(--brand);box-shadow:var(--ring)}
+.check textarea::placeholder{color:var(--text-3)}
+.chk-acts{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.chk-acts .sp{flex:1}
+.filechip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:9px;background:var(--surface-2);font-size:13px;max-width:240px}
+.filechip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filechip button{border:0;background:none;color:var(--text-3);padding:0 2px;font-size:16px;line-height:1}
+.errline{margin-top:10px;font-size:13.5px;color:var(--neg)}
+.fsec{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.fsec h3{margin:0 0 12px;font-size:14px;letter-spacing:-.01em}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fgrid label,.costs label{display:block;font-size:12.5px;font-weight:600;color:var(--text-2);margin-bottom:5px}
+.fgrid input,.costs input{width:100%;height:42px;border-radius:10px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);padding:0 12px;font:inherit;font-size:15px;outline:none;transition:.15s}
+.fgrid input::placeholder,.costs input::placeholder{color:var(--text-3)}
+.fgrid input.need{border-color:var(--warn);background:var(--warn-soft)}
+.checkmsg{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:13.5px}
+details.costs{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
+details.costs summary{cursor:pointer;font-size:14px;font-weight:600}
+.costgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+.costs p{margin:10px 0 0;font-size:12.5px;color:var(--text-3)}
+.vcard{display:grid;grid-template-columns:1fr;overflow:hidden;text-align:left}
+.vmain{padding:28px}
+.vside{padding:28px;background:var(--surface-2);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:12px}
+.vtag{display:inline-flex;align-items:center;padding:5px 12px;border-radius:99px;font-weight:700;font-size:13.5px}
+.vtag.take{background:var(--brand-soft);color:var(--brand-ink)}
+.vtag.counter{background:var(--warn-soft);color:var(--warn)}
+.vtag.pass{background:var(--neg-soft);color:var(--neg)}
+.vline{margin:10px 0 18px;color:var(--text-2);font-size:14.5px}
+.vlane{font-size:15px;font-weight:600;margin:12px 0 0}
+.vnums{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.vnums div{padding:12px;border-radius:12px;background:var(--surface)}
+.vnums small{display:block;font-size:12px;color:var(--text-3);margin-bottom:2px}
+.vnums b{font-size:19px;letter-spacing:-.02em}
+.msgbox{padding:12px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.notes{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:13px;color:var(--text-2)}
+.notes li.warn{color:var(--warn);font-weight:600}
+.fine{margin:14px 0 0;font-size:12.5px;color:var(--text-3)}
+
 /* Markets */
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
 .mk{padding:20px;transition:transform .15s,box-shadow .15s}
@@ -392,6 +442,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
    ========================================================= */
 @media (max-width:980px){
   .verdict{grid-template-columns:1fr}
+  .chk-layout{grid-template-columns:minmax(0,1fr)}
   .v-side{border-left:0;border-top:1px solid var(--border)}
   .tiers{grid-template-columns:1fr;max-width:480px;margin-left:auto;margin-right:auto}
 }
@@ -409,7 +460,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .nav .wrap{gap:12px}
   .links{position:fixed;bottom:0;left:0;right:0;z-index:40;justify-content:space-around;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
     background:var(--nav);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--border)}
-  .links button{flex:1}
+  .links button{flex:1;padding:8px 2px;font-size:12px;white-space:nowrap}
+  .fgrid{grid-template-columns:1fr}
+  .costgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .vmain,.vside{padding:20px}
   .hero{padding:32px 0 8px}
   .v-main,.v-side,.pad{padding:20px}
   .kv{grid-template-columns:1fr 1fr}
@@ -427,12 +481,13 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <!-- ============ NAV ============ -->
 <header class="nav">
   <div class="wrap">
-    <a class="logo" href="#" onclick="go('board');return false" aria-label="ProfitLane home">
+    <a class="logo" href="#" onclick="go('check');return false" aria-label="ProfitLane home">
       <span class="mark"><svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 25 L16 7 L25 25"/><path d="M16 17v8" stroke-dasharray="2 4"/></svg></span>
       ProfitLane
     </a>
     <nav class="links" aria-label="Primary">
-      <button data-view="board" aria-current="page" onclick="go('board')">Load board</button>
+      <button data-view="check" aria-current="page" onclick="go('check')">Check a load</button>
+      <button data-view="board" onclick="go('board')">Sample board</button>
       <button data-view="markets" onclick="go('markets')">Markets</button>
       <button data-view="pricing" onclick="go('pricing')">Pricing</button>
     </nav>
@@ -441,13 +496,66 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 </header>
 
 <main>
-<!-- ============ BOARD ============ -->
-<section id="v-board">
+<!-- ============ CHECK A LOAD ============ -->
+<section id="v-check">
   <div class="wrap">
     <div class="hero">
-      <span class="pill"><span class="dot">New</span> Profit Chain plans your next two loads</span>
-      <h1>Find the load that <em>actually pays you.</em></h1>
-      <p>Most boards rank by what a load pays. ProfitLane ranks by what you keep, after fuel, empty miles and the drive out of where it drops you.</p>
+      <span class="pill" id="check-pill"><span class="dot">New</span> Works with any load board, broker text or rate confirmation</span>
+      <h1>Is this load <em>worth it?</em></h1>
+      <p>Paste any offer. See what you'd keep after fuel and empty miles, your break-even, and the price to counter with.</p>
+    </div>
+    <div class="chk-layout">
+      <div class="check">
+        <label for="offer" style="position:absolute;left:-9999px">Load offer</label>
+        <textarea id="offer" placeholder="Paste the offer here. For example: Dallas, TX to Atlanta, GA, 781 mi, $1,500, dry van"></textarea>
+        <div class="chk-acts">
+          <input type="file" id="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" class="hide" onchange="pickFile(this)"/>
+          <button type="button" class="btn" id="attach" onclick="$('file').click()">Attach screenshot or PDF</button>
+          <span id="filechip"></span>
+          <span class="sp"></span>
+          <button type="button" class="btn primary" id="readbtn" onclick="readOffer()">Read this load</button>
+        </div>
+        <div class="errline" id="readerr" hidden></div>
+
+        <div class="fsec">
+          <h3>The numbers we'll use. Change anything that's off.</h3>
+          <div class="fgrid">
+            <div><label for="c-pay">Pay ($)</label><input id="c-pay" inputmode="decimal" placeholder="1500"/></div>
+            <div><label for="c-miles">Loaded miles</label><input id="c-miles" inputmode="decimal" placeholder="781"/></div>
+            <div><label for="c-origin">Pickup</label><input id="c-origin" list="cities" autocomplete="off" placeholder="Dallas, TX"/></div>
+            <div><label for="c-dest">Delivery</label><input id="c-dest" list="cities" autocomplete="off" placeholder="Atlanta, GA"/></div>
+            <div><label for="c-truck">Truck is now in</label><input id="c-truck" list="cities" autocomplete="off" placeholder="Fort Worth, TX"/></div>
+            <div><label for="c-in">Empty miles to pickup</label><input id="c-in" inputmode="decimal" placeholder="Estimated for you"/></div>
+            <div><label for="c-out">Empty miles after delivery</label><input id="c-out" inputmode="decimal" placeholder="Estimated for you"/></div>
+            <div class="who" style="align-self:end;padding-bottom:8px">I run
+              <div class="tog" role="group" aria-label="Accounting model">
+                <button type="button" data-mode="fleet" aria-pressed="true" onclick="setMode('fleet')" title="Driver pay is a cost">a fleet</button>
+                <button type="button" data-mode="owner" aria-pressed="false" onclick="setMode('owner')" title="Driver pay is your take-home">my own truck</button>
+              </div>
+            </div>
+          </div>
+          <div class="checkmsg" id="checkmsg" hidden></div>
+        </div>
+
+        <details class="costs">
+          <summary>My costs</summary>
+          <div class="costgrid" id="costgrid"></div>
+          <p>Saved in this browser only. Pre-filled values are starting estimates, so use your own numbers.</p>
+        </details>
+      </div>
+      <div id="check-out" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SAMPLE BOARD ============ -->
+<section id="v-board" class="hide">
+  <div class="wrap">
+    <div class="hero">
+      <span class="pill"><span class="dot">Sample data</span> A preview of ranking by profit</span>
+      <h1>See how ranking by <em>profit</em> works.</h1>
+      <p>Most boards rank by what a load pays. This preview ranks by what you'd keep, and plans the next load too.</p>
+      <div class="notice" role="note"><span><b>These are not real loads.</b> This board uses synthetic loads dated June 2026 to show how the ranking works. They can't be booked. To check a real offer, use <a href="#" onclick="go('check');return false">Check a load</a>.</span></div>
 
       <form class="search" id="search" onsubmit="event.preventDefault();run()">
         <div class="modes" role="tablist">
@@ -492,8 +600,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
         <div class="prefs">
           <div class="who">I run
             <div class="tog" role="group" aria-label="Accounting model">
-              <button type="button" id="m-fleet" aria-pressed="true" onclick="setMode('fleet')" title="Driver pay is a cost">a fleet</button>
-              <button type="button" id="m-owner" aria-pressed="false" onclick="setMode('owner')" title="Driver pay is your take-home">my own truck</button>
+              <button type="button" data-mode="fleet" aria-pressed="true" onclick="setMode('fleet')" title="Driver pay is a cost">a fleet</button>
+              <button type="button" data-mode="owner" aria-pressed="false" onclick="setMode('owner')" title="Driver pay is your take-home">my own truck</button>
             </div>
           </div>
           <button type="button" class="switch" id="hsw" role="switch" aria-checked="true" onclick="toggleHide()"><i></i>Hide money-losing loads</button>
@@ -509,9 +617,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <section id="v-markets" class="hide">
   <div class="wrap">
     <div class="ptitle">
-      <span class="pill"><span class="dot">Data</span> From 100,000 posted loads</span>
-      <h2>Where trucks earn the most.</h2>
-      <p>The ten best markets to base a truck: lots of outbound freight, easy to leave, and strong rates.</p>
+      <span class="pill"><span class="dot">Sample data</span> Computed from 100,000 synthetic loads</span>
+      <h2>How we score a market.</h2>
+      <p>Lots of outbound freight, easy to leave, and strong rates. These rankings come from sample data, so they show the method and are not market advice.</p>
     </div>
     <div class="formula" id="formula"></div>
     <div class="mgrid" id="markets"></div>
@@ -524,7 +632,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
     <div class="ptitle">
       <span class="pill"><span class="dot">Simple</span> Cancel anytime</span>
       <h2>Pays for itself on the first load.</h2>
-      <p>One better load is usually worth hundreds of dollars. Pro costs less than a tank of fuel.</p>
+      <p>One better counter-offer can cover the month. Start free, and upgrade when you want unlimited reads.</p>
     </div>
     <div class="card roi" id="roi"></div>
     <div class="tiers" id="tiers"></div>
@@ -536,7 +644,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 <footer>
   <div class="wrap">
     <span>© ProfitLane · See what you actually keep.</span>
-    <span>Every dollar is computed by deterministic code. AI only writes the summary.</span>
+    <span>Every dollar is computed by plain code. AI only reads offers and writes summaries. Results are estimates, not guarantees.</span>
   </div>
 </footer>
 
@@ -610,9 +718,10 @@ applyTheme(store('pl-theme'));
 
 /* ---------- views ---------- */
 function go(v){
-  ['board','markets','pricing'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
+  ['check','board','markets','pricing'].forEach(x=>$('v-'+x).classList.toggle('hide',x!==v));
   document.querySelectorAll('.links button').forEach(b=>b.toggleAttribute('aria-current',b.dataset.view===v));
   document.querySelectorAll('.links button[aria-current]').forEach(b=>b.setAttribute('aria-current','page'));
+  if(v==='board'&&!state.data) run();
   if(v==='markets'&&!state.mk) loadMarkets();
   if(v==='pricing') renderPricing();
   window.scrollTo({top:0,behavior:'smooth'});
@@ -632,8 +741,9 @@ document.querySelectorAll('#eq button').forEach(b=>b.onclick=()=>{
 function setEq(e){ document.querySelectorAll('#eq button').forEach(x=>{ const on=x.textContent===e; x.setAttribute('aria-pressed',on); if(on) state.eq=e; }); }
 function setMode(m){
   state.mode=m;
-  $('m-fleet').setAttribute('aria-pressed',m==='fleet'); $('m-owner').setAttribute('aria-pressed',m==='owner');
+  document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
   if(state.data) render(state.data,false);
+  if(state.check) renderCheck(state.check,false);
 }
 function toggleHide(){ state.hide=!state.hide; $('hsw').setAttribute('aria-checked',state.hide); }
 
@@ -644,8 +754,7 @@ async function loadMe(){ try{ state.me=await(await fetch('/api/me')).json(); }ca
 function renderAcct(){
   const m=state.me, p=[];
   if(m){
-    if(m.signed_in && m.money_found>0) p.push(`<span class="found">${I.spark}<span class="t">Found you</span> <b>${money(m.money_found)}</b></span>`);
-    if(m.searches_left!=null) p.push(`<span class="quota">${m.searches_left} free ${m.searches_left===1?'search':'searches'} left</span>`);
+    if(m.searches_left!=null) p.push(`<span class="quota">${m.searches_left} free ${m.searches_left===1?'read':'reads'} left today</span>`);
     p.push(`<span class="plan ${m.plan!=='free'?'paid':''}">${esc(m.plan)}</span>`);
     if(m.api_key) p.push(`<button class="iconbtn" title="API key" aria-label="API key" onclick="openModal('api')">${I.key}</button>`);
     if(!m.signed_in) p.push(`<button class="btn ghost hide-sm" onclick="openModal('signup')">Sign up</button>`);
@@ -665,7 +774,7 @@ const MODALS={
     b:p?`Next step is checkout for <b>${esc(p[0].toUpperCase()+p.slice(1))}</b>. No password needed.`:'Track every dollar ProfitLane finds you compared with the highest-paying load.',go:'Continue'}),
   lead:p=>({ic:I.spark,t:`Get ${esc((p||'pro')[0].toUpperCase()+(p||'pro').slice(1))} access`,
     b:'We are onboarding carriers personally right now. Leave your email and we will switch it on within 24 hours.',go:'Request access'}),
-  limit:()=>({ic:I.lock,t:"You've used today's free searches",b:'Pro is unlimited, shows the full ranked board, and plans your next two loads.',go:'Upgrade to Pro',noEmail:true}),
+  limit:()=>({ic:I.lock,t:"You've used today's free reads",b:'Pro is unlimited. You can still type a load in yourself, free, as often as you like.',go:'Upgrade to Pro',noEmail:true}),
   api:()=>({ic:I.key,t:'Your Fleet API key',b:'Send <b>POST /v1/recommend</b> with the header <b>Authorization: Bearer &lt;key&gt;</b>. Same JSON as the board.',go:'Done',noEmail:true,extra:true}),
 };
 function openModal(kind,plan){
@@ -732,7 +841,7 @@ async function run(){
 
 function limitCard(){
   return `<div class="card teaser reveal" style="margin-top:40px"><span class="lockic">${I.lock}</span>
-    <div class="tx"><h4>You've used today's free searches</h4><p>Come back tomorrow, or go unlimited with Pro.</p></div>
+    <div class="tx"><h4>You've used today's free reads</h4><p>Come back tomorrow, or go unlimited with Pro.</p></div>
     <button class="btn brand" onclick="upgrade('pro')">Upgrade to Pro</button></div>`;
 }
 
@@ -816,7 +925,7 @@ function verdict(L,alt){
   </div>`;
 }
 
-function detail(L,best){
+function detail(L,best,title){
   const f=F(), g=Math.max(L.gross_revenue,1), keep=L[f.net];
   const parts=[['Fuel','--c-fuel',L.fuel_cost]];
   if(f.driverIsCost) parts.push(['Driver pay','--c-driver',L.driver_pay]);
@@ -826,10 +935,12 @@ function detail(L,best){
   const bar=parts.map(([n,c,v],i)=>`<i style="width:${v/denom*100}%;background:var(${c});animation-delay:${i*.05}s" title="${n} ${money(v)}"></i>`).join('')
     +(keep>0?`<i style="width:${keep/denom*100}%;background:var(--brand);animation-delay:.3s" title="Kept ${money(keep)}"></i>`:'');
   const leg=parts.map(([n,c,v])=>`<div class="lgd"><span class="sw" style="background:var(${c})"></span><span>${n}</span><span class="v">${money(v)}</span><span class="p">${pct(v/g*100)}</span></div>`).join('');
-  const label=L.id===best.id?'Best load':`${esc(L.origin)} → ${esc(L.destination)}`;
+  const label=title||(L.id===best.id?'Best load':`${esc(L.origin)} → ${esc(L.destination)}`);
   const t=Math.max(L.total_miles,1);
   const seg=(c,v,lbl)=>v>0?`<div class="${c}" style="flex:${v/t}" title="${lbl}">${v/t>.14?num(v)+' mi':''}</div>`:'';
   const s=L.destination_score, sw=s>=.6?'strong':s>=.35?'average':'weak';
+  const gauge=s==null?'':`<div class="gauge"><div class="top"><span>Drop-off market: <b>${esc(L.destination)}</b></span><b>${sw} · ${s.toFixed(2)}</b></div>
+        <div class="gtrack"><i style="left:${Math.min(100,Math.max(0,s*100))}%"></i></div></div>`;
   return `<div class="card pad">
       <div class="ct"><h3>Where the money goes</h3><span>${label}</span></div>
       <div class="stack" role="img" aria-label="Cost breakdown">${bar}</div>
@@ -844,8 +955,7 @@ function detail(L,best){
       <div class="rlegend"><span><i class="r-in"></i>Empty to pickup · ${num(L.deadhead_in_miles)} mi</span>
         <span><i class="r-load"></i>Loaded · ${num(L.loaded_miles)} mi</span>
         <span><i class="r-out"></i>Empty after · ~${num(L.deadhead_out_miles)} mi</span></div>
-      <div class="gauge"><div class="top"><span>Drop-off market: <b>${esc(L.destination)}</b></span><b>${sw} · ${s.toFixed(2)}</b></div>
-        <div class="gtrack"><i style="left:${Math.min(100,Math.max(0,s*100))}%"></i></div></div>
+      ${gauge}
       <div class="kv"><div><small>Pays per mile</small><b>${money2(L.rate_per_mile)}</b></div>
         <div><small>Kept per mile</small><b>${money2(L[f.npm])}</b></div>
         <div><small>Total cost</small><b>${money(costTotal)}</b></div></div>
@@ -937,6 +1047,156 @@ function pick(id){
 }
 
 /* =========================================================
+   Check a load
+   ========================================================= */
+const COSTS=[['mpg','Miles per gallon',6.5],['fuel_price_per_gallon','Diesel ($/gal)',4],['driver_pay_per_mile','Driver pay ($/mi)',.65],
+  ['maintenance_per_mile','Maintenance ($/mi)',.18],['insurance_per_day','Insurance ($/day)',50],['toll_per_mile','Tolls ($/mi)',.03]];
+const TARGET_DEFAULT=.30;
+const FIELDS={pay:'c-pay',loaded_miles:'c-miles',origin:'c-origin',destination:'c-dest'};
+const LABELS={pay:'pay',loaded_miles:'loaded miles',rate_per_mile:'rate per mile'};
+let upload=null, checkSeq=0, checkTimer=null;
+
+function savedCosts(){ try{ return JSON.parse(store('pl-costs')||'{}')||{}; }catch(e){ return {}; } }
+function buildCosts(){
+  const sv=savedCosts();
+  const rows=[...COSTS,['target','Profit target ($/mi)',TARGET_DEFAULT]];
+  $('costgrid').innerHTML=rows.map(([k,l,d])=>`<div><label for="k-${k}">${l}</label><input id="k-${k}" data-cost="${k}" inputmode="decimal" value="${esc(sv[k]??d)}"/></div>`).join('');
+  $('c-truck').value=store('pl-truck')||'';
+}
+const numv=id=>{ const v=parseFloat(String($(id).value).replace(/[$,\s]/g,'')); return isFinite(v)?v:null; };
+function currentCosts(){
+  const out={}, sv={};
+  document.querySelectorAll('[data-cost]').forEach(i=>{ const v=parseFloat(i.value); if(isFinite(v)){ sv[i.dataset.cost]=v; if(i.dataset.cost!=='target') out[i.dataset.cost]=v; } });
+  store('pl-costs',JSON.stringify(sv));
+  return {costs:out,target:sv.target};
+}
+function pickFile(el){
+  const f=el.files&&el.files[0]; el.value=''; $('readerr').hidden=true;
+  if(!f) return;
+  if(f.size>5*1024*1024){ showReadErr('That file is over 5 MB. Try a smaller screenshot.'); return; }
+  const rd=new FileReader();
+  rd.onload=()=>{ upload={b64:String(rd.result).split(',')[1],type:f.type,name:f.name}; showFile(); };
+  rd.readAsDataURL(f);
+}
+function showFile(){
+  $('filechip').innerHTML=upload?`<span class="filechip"><span>${esc(upload.name)}</span><button type="button" aria-label="Remove file" onclick="upload=null;showFile()">×</button></span>`:'';
+}
+function showReadErr(m){ $('readerr').textContent=m; $('readerr').hidden=false; }
+
+async function readOffer(){
+  const text=$('offer').value.trim();
+  $('readerr').hidden=true;
+  if(!text&&!upload){ showReadErr('Paste a load offer or attach a file first.'); $('offer').focus(); return; }
+  const btn=$('readbtn'), label=btn.textContent; btn.disabled=true; btn.textContent='Reading…';
+  try{
+    const r=await fetch('/api/check/read',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text,upload_base64:upload?upload.b64:null,media_type:upload?upload.type:null})});
+    const d=await r.json().catch(()=>({}));
+    await loadMe();
+    if(r.status===402){ openModal('limit'); return; }
+    if(!r.ok){ showReadErr(d.message||'We could not read that. Type the numbers in below.'); return; }
+    fillFields(d);
+    await runCheck(true);
+    if(innerWidth<=980) $('check-out').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){ showReadErr('We could not reach the server. Check your connection and try again.'); }
+  finally{ btn.disabled=false; btn.textContent=label; }
+}
+function fillFields(d){
+  const f=d.fields||{};
+  document.querySelectorAll('.fgrid input').forEach(i=>i.classList.remove('need'));
+  Object.entries(FIELDS).forEach(([k,id])=>{ $(id).value=f[k]??''; });
+  $('c-in').value=''; $('c-out').value='';
+  const need=(d.check||[]);
+  need.forEach(k=>{ if(FIELDS[k]) $(FIELDS[k]).classList.add('need'); });
+  const msgs=[];
+  if(need.length) msgs.push(`Check ${need.map(k=>LABELS[k]||k).join(' and ')} against the offer before you rely on this.`);
+  if(d.pay_from_rate) msgs.push('Pay was worked out from the rate per mile × loaded miles.');
+  if(f.pay==null) msgs.push("We couldn't find the pay. Enter it above.");
+  else if(f.loaded_miles==null) msgs.push("We couldn't find the loaded miles, so they're estimated from the cities if we know them.");
+  if(d.reader==='basic'&&(f.origin==null||f.destination==null)) msgs.push("We couldn't find both cities. Add them for a better estimate of empty miles.");
+  $('checkmsg').textContent=msgs.join(' '); $('checkmsg').hidden=!msgs.length;
+}
+function scheduleCheck(){ clearTimeout(checkTimer); checkTimer=setTimeout(()=>runCheck(false),250); }
+async function runCheck(animate,example){
+  const gross=numv('c-pay');
+  if(gross==null||gross<=0){ if(!example){ state.check=null; $('check-out').innerHTML=''; } return; }
+  const {costs,target}=currentCosts();
+  const val=id=>$(id).value.trim()||null;
+  if(!example) store('pl-truck',$('c-truck').value.trim());
+  const body={gross,loaded_miles:numv('c-miles'),origin:val('c-origin'),destination:val('c-dest'),truck_location:val('c-truck'),
+    empty_in_miles:numv('c-in'),empty_out_miles:numv('c-out'),costs,target_profit_per_mile:target};
+  const seq=++checkSeq;
+  try{
+    const r=await fetch('/api/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({}));
+    if(seq!==checkSeq) return;
+    if(!r.ok){
+      state.check=null;
+      $('check-out').innerHTML=`<div class="card empty"><h3>We need one more number</h3><p>${esc(d.message||'One of those values looks out of range. Check the numbers above.')}</p></div>`;
+      return;
+    }
+    state.check={...d,example:!!example};
+    renderCheck(state.check,animate);
+  }catch(e){ /* keep the last good result while typing */ }
+}
+function sourceNotes(r){
+  const n=[], s=r.sources||{};
+  if(s.empty_in==='unknown') n.push(['warn',"Add where your truck is now. We counted 0 empty miles to pickup, so this is too generous."]);
+  if(s.empty_in==='estimated'&&r.deadhead_in_miles>=1) n.push(['',`Empty to pickup: about ${num(r.deadhead_in_miles)} mi, straight-line estimate.`]);
+  if(s.loaded==='estimated') n.push(['warn',`Loaded miles: about ${num(r.loaded_miles)}, estimated from the cities. Enter the real figure.`]);
+  if(s.empty_out==='estimated') n.push(['',`Empty after delivery: about ${num(r.deadhead_out_miles)} mi, a rough estimate. Change it if you know the lane.`]);
+  return n;
+}
+function copyMsg(btn){
+  const t=state.check&&state.check.counter_message; if(!t) return;
+  const done=()=>{ btn.textContent='Copied'; setTimeout(()=>btn.textContent='Copy message',1500); };
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(done).catch(()=>toast('Select the message and copy it.'));
+}
+function renderCheck(r,animate){
+  const f=F(), keep=r[f.net], be=r[f.cost];
+  const V={take:['Take it',`It clears your ${money2(r.target_profit_per_mile)}/mi profit target.`],
+    counter:['Counter',`It makes money but misses your ${money2(r.target_profit_per_mile)}/mi profit target.`],
+    pass:['Pass or counter','At this price it loses money.']}[r.verdict];
+  const lane=r.origin&&r.destination?`${esc(r.origin)} → ${esc(r.destination)}`:'This load';
+  const side=r.counter_price?`
+      <div class="vnums"><div><small>Counter at</small><b>${money(r.counter_price)}</b></div><div><small>Per loaded mile</small><b>${money2(r.counter_per_mile)}</b></div></div>
+      <div class="msgbox">${esc(r.counter_message)}</div>
+      <button type="button" class="btn" onclick="copyMsg(this)">Copy message</button>`
+    :`<div class="vnums"><div><small>Pays per loaded mile</small><b>${money2(r.rate_per_mile)}</b></div><div><small>Break-even per loaded mile</small><b>${money2(r.break_even_per_loaded_mile)}</b></div></div>
+      <div class="msgbox">No counter needed at your target. You could still ask for more.</div>`;
+  const notes=sourceNotes(r).map(([c,t])=>`<li class="${c}">${esc(t)}</li>`).join('');
+  $('check-out').innerHTML=`<div class="card vcard ${animate?'reveal':''}">
+      <div class="vmain">
+        ${r.example?'<span class="eyebrow" style="display:block;margin-bottom:10px">Example offer</span>':''}
+        <span class="vtag ${r.verdict}">${V[0]}</span>
+        <p class="vlane">${lane}</p>
+        <p class="vline">${V[1]}</p>
+        <div class="keeprow"><span class="lbl">${f.driverIsCost?'You keep':'You take home'}</span>
+          <span class="big ${keep<0?'neg':''}" id="chk-keep">${money(keep)}</span></div>
+        <div class="facts"><span class="chip">Pays <b>${money(r.gross_revenue)}</b></span>
+          <span class="chip">Break-even <b>${money(be)}</b></span>
+          <span class="chip"><b>${num(r.total_miles)}</b> total mi</span></div>
+        ${notes?`<ul class="notes">${notes}</ul>`:''}
+        <p class="fine">Estimates from your cost settings${f.driverIsCost?'':'; break-even here pays you no wage'}. Not a guarantee.</p>
+      </div>
+      <div class="vside">${side}</div>
+    </div>
+    <div class="grid2">${detail(r,r,'This load')}</div>`;
+  if(animate){ const el=$('chk-keep'); if(el) countUp(el,keep,money); }
+}
+function loadExample(){
+  const set=(id,v)=>{ const e=$(id), o=e.value; e.value=v; return ()=>{ e.value=o; }; };
+  const undo=[set('c-pay','1500'),set('c-miles','781'),set('c-origin','Dallas, TX'),set('c-dest','Atlanta, GA'),set('c-truck','Fort Worth, TX')];
+  const p=runCheck(false,true);
+  undo.forEach(u=>u());
+  return p;
+}
+document.addEventListener('input',e=>{
+  if(!e.target.closest) return;
+  if(e.target.closest('.fgrid')||e.target.closest('#costgrid')){ e.target.classList.remove('need'); scheduleCheck(); }
+});
+
+/* =========================================================
    Markets + pricing
    ========================================================= */
 async function loadMarkets(){
@@ -960,8 +1220,8 @@ async function renderPricing(){
   if(!state.plans){ try{ state.plans=(await(await fetch('/api/plans')).json()).plans; }catch(e){ return; } }
   const d=state.data, b=d&&d.best, a=d&&d.highest_gross;
   $('roi').innerHTML=(b&&a&&a.id!==b.id)
-    ? `On your last search, ProfitLane's pick kept <b>${money(b.net_profit-a.net_profit)} more</b> than the highest-paying load. Pro is $39 a month.`
-    : `Run a search and we'll show you exactly how much more our pick keeps than the highest-paying load.`;
+    ? `On the sample board, our pick kept <b>${money(b.net_profit-a.net_profit)} more</b> than the highest-paying load. Pro is $39 a month.`
+    : `Pro is $39 a month, with unlimited load reads. Typing a load in yourself is always free.`;
   const cur=(state.me&&state.me.plan)||'free';
   $('tiers').innerHTML=Object.entries(state.plans).map(([k,p])=>`<div class="card tier ${k==='pro'?'hot':''}">
     ${k==='pro'?'<span class="flag">Most popular</span>':''}
@@ -981,7 +1241,7 @@ async function loadCities(){
   try{ const d=await(await fetch('/api/locations')).json();
     $('cities').innerHTML=d.locations.map(c=>`<option value="${esc(c)}">`).join(''); }catch(e){}
 }
-window.addEventListener('load',async()=>{ renderAcct(); loadCities(); await loadMe(); run(); });
+window.addEventListener('load',async()=>{ renderAcct(); buildCosts(); loadCities(); loadExample(); await loadMe(); });
 </script>
 </body>
 </html>

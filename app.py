@@ -31,14 +31,15 @@ from typing import Any, Optional
 
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import accounts
 import billing
+import load_check
 from config import (
-    ADMIN_TOKEN, BRAND, COOKIE_SECURE, DEFAULTS, FUEL_DISCOUNT_PER_GALLON,
-    MARKET_SCORE_WEIGHTS, MODEL, PARTNERS, PICKUP_RADIUS_MILES, PLANS,
-    STRIPE_WEBHOOK_SECRET,
+    ADMIN_TOKEN, AI_READS_PER_DAY_CAP, BRAND, COOKIE_SECURE, DEFAULTS, FUEL_DISCOUNT_PER_GALLON,
+    MARKET_SCORE_WEIGHTS, MAX_UPLOAD_BYTES, MODEL, PARTNERS, PICKUP_RADIUS_MILES, PLANS,
+    STRIPE_WEBHOOK_SECRET, TARGET_PROFIT_PER_MILE, UPLOAD_TYPES,
 )
 from data_layer import load_all_loads, get_city_coords, get_market_scores, get_top_markets
 from agent import get_recommendation
@@ -90,6 +91,33 @@ class EmailRequest(BaseModel):
 class GrantRequest(BaseModel):
     email: str
     plan: str
+
+
+class ReadRequest(BaseModel):
+    text: str = Field("", max_length=20000)
+    upload_base64: Optional[str] = Field(None, max_length=MAX_UPLOAD_BYTES * 4 // 3 + 8)
+    media_type: Optional[str] = None
+
+
+class CostProfile(BaseModel):
+    mpg: Optional[float] = Field(None, gt=0, le=20)
+    fuel_price_per_gallon: Optional[float] = Field(None, ge=0, le=15)
+    driver_pay_per_mile: Optional[float] = Field(None, ge=0, le=5)
+    maintenance_per_mile: Optional[float] = Field(None, ge=0, le=5)
+    insurance_per_day: Optional[float] = Field(None, ge=0, le=1000)
+    toll_per_mile: Optional[float] = Field(None, ge=0, le=5)
+
+
+class CheckRequest(BaseModel):
+    gross: float = Field(gt=0, le=load_check.MAX_PAY)
+    loaded_miles: Optional[float] = Field(None, gt=0, le=load_check.MAX_MILES)
+    origin: Optional[str] = Field(None, max_length=80)
+    destination: Optional[str] = Field(None, max_length=80)
+    truck_location: Optional[str] = Field(None, max_length=80)
+    empty_in_miles: Optional[float] = Field(None, ge=0, le=load_check.MAX_MILES)
+    empty_out_miles: Optional[float] = Field(None, ge=0, le=load_check.MAX_MILES)
+    costs: Optional[CostProfile] = None
+    target_profit_per_mile: Optional[float] = Field(None, ge=0, le=5)
 
 
 # ------------------------------------------------------------------
@@ -168,6 +196,63 @@ def api_recommend(req: RecommendRequest, request: Request) -> JSONResponse:
     if new_anon:
         _set_cookie(resp, ANON_COOKIE, new_anon)
     return resp
+
+
+# ------------------------------------------------------------------
+# Paste any load
+# ------------------------------------------------------------------
+def _read_problem(req: ReadRequest) -> Optional[JSONResponse]:
+    """Requests that can't succeed are refused before they use up a read."""
+    if not req.text.strip() and not req.upload_base64:
+        return JSONResponse({"error": "empty", "message": "Paste a load offer or attach a file."}, status_code=400)
+    if req.upload_base64 and req.media_type not in UPLOAD_TYPES:
+        return JSONResponse({"error": "file_type", "message": "Use a PNG, JPG, WebP, GIF or PDF file."}, status_code=400)
+    if req.upload_base64 and not load_check.ai_available():
+        return JSONResponse({"error": "ai_unavailable",
+                             "message": "Reading screenshots and PDFs is unavailable right now. "
+                                        "Paste the text or type the numbers."}, status_code=422)
+    return None
+
+
+def _read_offer(req: ReadRequest) -> JSONResponse:
+    allow_ai, _ = accounts.consume_search("global:ai_reads", AI_READS_PER_DAY_CAP)
+    result = load_check.read_load(req.text, req.upload_base64, req.media_type, allow_ai=allow_ai)
+    return JSONResponse(_clean(result), status_code=422 if result.get("error") else 200)
+
+
+def _evaluate(req: CheckRequest) -> JSONResponse:
+    costs = req.costs.model_dump(exclude_none=True) if req.costs else None
+    result = load_check.evaluate_load(
+        req.gross, req.loaded_miles, req.origin, req.destination, req.truck_location,
+        req.empty_in_miles, req.empty_out_miles, costs, req.target_profit_per_mile,
+    )
+    return JSONResponse(_clean(result), status_code=422 if result.get("error") else 200)
+
+
+@app.post("/api/check/read")
+def api_check_read(req: ReadRequest, request: Request) -> JSONResponse:
+    """Turn an offer into fields for the driver to review. Counts against the plan's daily limit."""
+    acct, subject, new_anon = _identity(request)
+    plan = acct["plan"] if acct else "free"
+    problem = _read_problem(req)
+    if problem:
+        return problem
+    allowed, _ = accounts.consume_search(subject, PLANS[plan]["daily_searches"])
+    if allowed:
+        resp = _read_offer(req)
+    else:
+        resp = JSONResponse({"error": "daily_limit", "plan": plan,
+                             "message": "You've used today's free AI reads. You can still type a load in."},
+                            status_code=402)
+    if new_anon:
+        _set_cookie(resp, ANON_COOKIE, new_anon)
+    return resp
+
+
+@app.post("/api/check")
+def api_check(req: CheckRequest) -> JSONResponse:
+    """Pure math on the driver's reviewed numbers: free, unmetered, recomputed on every edit."""
+    return _evaluate(req)
 
 
 # ------------------------------------------------------------------
@@ -277,11 +362,35 @@ def admin_grant(req: GrantRequest, request: Request) -> JSONResponse:
 # ------------------------------------------------------------------
 # Public REST API (Fleet plan): Authorization: Bearer <api_key>
 # ------------------------------------------------------------------
-@app.post("/v1/recommend")
-def v1_recommend(req: RecommendRequest, request: Request) -> JSONResponse:
+def _api_account(request: Request) -> Optional[dict]:
     auth = request.headers.get("authorization") or ""
     acct = accounts.get_by_api_key(auth[7:].strip() if auth.lower().startswith("bearer ") else None)
-    if not acct or not PLANS[acct["plan"]]["api"]:
+    return acct if acct and PLANS[acct["plan"]]["api"] else None
+
+
+@app.post("/v1/check/read")
+def v1_check_read(req: ReadRequest, request: Request) -> JSONResponse:
+    acct = _api_account(request)
+    if not acct:
+        return JSONResponse({"error": "invalid_api_key_or_plan"}, status_code=401)
+    problem = _read_problem(req)
+    if problem:
+        return problem
+    accounts.consume_search("api:" + acct["id"], None)
+    return _read_offer(req)
+
+
+@app.post("/v1/check")
+def v1_check(req: CheckRequest, request: Request) -> JSONResponse:
+    if not _api_account(request):
+        return JSONResponse({"error": "invalid_api_key_or_plan"}, status_code=401)
+    return _evaluate(req)
+
+
+@app.post("/v1/recommend")
+def v1_recommend(req: RecommendRequest, request: Request) -> JSONResponse:
+    acct = _api_account(request)
+    if not acct:
         return JSONResponse({"error": "invalid_api_key_or_plan"}, status_code=401)
     accounts.consume_search("api:" + acct["id"], None)
     result = get_recommendation(
@@ -304,6 +413,7 @@ def api_markets() -> JSONResponse:
 def api_config() -> JSONResponse:
     return JSONResponse(_clean({
         "defaults": DEFAULTS, "model": MODEL, "pickup_radius": PICKUP_RADIUS_MILES,
+        "target_profit_per_mile": TARGET_PROFIT_PER_MILE,
     }))
 
 

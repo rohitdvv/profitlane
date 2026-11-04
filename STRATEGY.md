@@ -5,6 +5,13 @@ Every load board ranks by what a load **pays**. Truckers live on what they **kee
 is the only board that ranks by take-home after fuel, deadhead and the empty drive out, and now
 plans the next load too. Everything below follows from that.
 
+## Update: the driver brings the load
+ProfitLane no longer depends on a load feed to launch. Check a load prices any offer a driver
+pastes, so a load board can't block the core product, though a lawyer should still review the
+terms. With permission, pasted loads can later become our own lane-rate data. The ranked board
+stays as a sample-data preview until there is a licensed feed. The rest of this document predates
+this change.
+
 ## Market facts (researched October 2026)
 - **Costs are at a record high, and rates haven't caught up.** ATRI puts 2025 operating cost at
   $2.336/mi, up 3.4% ([Bulk Transporter](https://www.bulktransporter.com/fleet-management/news/55391667/atri-trucking-expenses-hit-record-2336-per-mile)).
