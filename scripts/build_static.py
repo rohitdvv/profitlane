@@ -27,8 +27,11 @@ os.environ.pop("ANTHROPIC_API_KEY", None)  # deterministic summaries; no API cal
 from accounts import apply_plan  # noqa: E402
 from agent import get_recommendation  # noqa: E402
 from app import _clean  # noqa: E402
-from config import FALLBACK_CITY_COORDS, MARKET_SCORE_WEIGHTS, PICKUP_RADIUS_MILES, PLANS  # noqa: E402
-from data_layer import get_top_markets, resolve_location  # noqa: E402
+from config import (  # noqa: E402
+    DEFAULTS, FALLBACK_CITY_COORDS, MARKET_SCORE_WEIGHTS, PICKUP_RADIUS_MILES, PLANS,
+    ROAD_FACTOR, TARGET_PROFIT_PER_MILE, UNKNOWN_MARKET_SCORE,
+)
+from data_layer import get_city_coords, get_market_scores, get_top_markets, resolve_location  # noqa: E402
 
 OUT = ROOT / "docs"
 EQUIPMENT = ["Dry Van", "Reefer", "Flatbed", "Step Deck"]
@@ -66,8 +69,16 @@ def main() -> None:
     (OUT / "data" / "markets.json").write_text(json.dumps(_clean({"markets": top_markets, "weights": MARKET_SCORE_WEIGHTS})))
     (OUT / "data" / "plans.json").write_text(json.dumps({"plans": PLANS}))
 
+    (OUT / "data" / "check.json").write_text(json.dumps({
+        "coords": {m: list(c) for m, c in get_city_coords().items() if m},
+        "scores": {m: s["market_score"] for m, s in get_market_scores().items()},
+        "defaults": DEFAULTS, "target": TARGET_PROFIT_PER_MILE,
+        "road_factor": ROAD_FACTOR, "unknown_score": UNKNOWN_MARKET_SCORE,
+    }, separators=(",", ":")))
+
     html = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
-    html = html.replace("</head>", '<script src="static-shim.js"></script>\n</head>', 1)
+    html = html.replace("</head>", '<script src="check-core.js"></script>\n<script src="static-shim.js"></script>\n</head>', 1)
+    shutil.copy(ROOT / "web" / "check-core.js", OUT / "check-core.js")
     (OUT / "index.html").write_text(html, encoding="utf-8")
     shutil.copy(ROOT / "web" / "static-shim.js", OUT / "static-shim.js")
     (OUT / ".nojekyll").write_text("")

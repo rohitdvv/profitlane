@@ -8,7 +8,7 @@ Thin Claude orchestration layer.
 
 - Every single number shown comes from deterministic Python (cost_engine + forward_scorer).
 
-MODEL comes from config (latest Sonnet; override with PROFITLANE_MODEL).
+MODEL comes from config (override with PROFITLANE_MODEL).
 """
 
 import os
@@ -39,29 +39,49 @@ def get_client() -> anthropic.Anthropic:
 # Structured parsing of user query via tool use
 # ------------------------------------------------------------------
 
-PARSE_TOOL = {
-    "name": "extract_load_request",
-    "description": "Extract the driver's current location (city, state), equipment type, and any other constraints from the natural language query.",
-    "input_schema": {
-        "type": "object",
-        "properties": {
-            "location": {
-                "type": "string",
-                "description": "City and state in 'City, ST' format, e.g. 'Dallas, TX' or 'Atlanta, GA'. Infer from context if possible.",
-            },
-            "equipment": {
-                "type": "string",
-                "enum": ["Dry Van", "Reefer", "Flatbed", "Step Deck"],
-                "description": "Equipment type requested. Default to Dry Van if unclear.",
-            },
-            "notes": {
-                "type": "string",
-                "description": "Any other constraints mentioned (short).",
-            },
+REQUEST_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "location": {
+            "type": "string",
+            "description": "City and state in 'City, ST' format, e.g. 'Dallas, TX' or 'Atlanta, GA'. Infer from context if possible.",
         },
-        "required": ["location", "equipment"],
+        "equipment": {
+            "type": "string",
+            "enum": ["Dry Van", "Reefer", "Flatbed", "Step Deck"],
+            "description": "Equipment type requested. Default to Dry Van if unclear.",
+        },
+        "notes": {
+            "type": "string",
+            "description": "Any other constraints mentioned (short).",
+        },
     },
+    "required": ["location", "equipment", "notes"],
+    "additionalProperties": False,
 }
+
+
+def ask_claude(content, system: str, schema: Optional[Dict] = None, max_tokens: int = 2000) -> str:
+    """
+    One Claude call; returns the response text. Raises when no text comes back.
+    With a schema, the text is guaranteed to be JSON matching it. Thinking blocks can
+    precede the text and refused requests carry no text, so never read content[0].
+    """
+    output_config: Dict[str, Any] = {"effort": "low"}
+    if schema:
+        output_config["format"] = {"type": "json_schema", "schema": schema}
+    resp = get_client().beta.messages.create(
+        model=MODEL,
+        max_tokens=max_tokens,
+        system=system,
+        messages=[{"role": "user", "content": content}],
+        output_config=output_config,
+        betas=["server-side-fallback-2026-06-01"],
+        fallbacks=[{"model": "claude-opus-4-8"}],
+    )
+    if resp.stop_reason in ("refusal", "max_tokens"):
+        raise RuntimeError(f"Claude stopped: {resp.stop_reason}")
+    return next(b.text for b in resp.content if b.type == "text").strip()
 
 
 def parse_query(query: str) -> Dict[str, str]:
@@ -91,21 +111,13 @@ def parse_query(query: str) -> Dict[str, str]:
 
     # Try real LLM
     try:
-        client = get_client()
-        msg = client.messages.create(
-            model=MODEL,
-            max_tokens=300,
-            system="You extract structured trucking load query parameters. Use the tool. Be precise.",
-            messages=[{"role": "user", "content": query}],
-            tools=[PARSE_TOOL],
-            tool_choice={"type": "tool", "name": "extract_load_request"},
-        )
-        for block in msg.content:
-            if block.type == "tool_use" and block.name == "extract_load_request":
-                inp = block.input or {}
-                loc = inp.get("location") or loc
-                eq = inp.get("equipment") or eq
-                return {"location": loc, "equipment": eq, "notes": inp.get("notes", "")}
+        inp = json.loads(ask_claude(
+            query,
+            system="You extract structured trucking load query parameters. Be precise.",
+            schema=REQUEST_SCHEMA,
+        ))
+        return {"location": inp.get("location") or loc, "equipment": inp.get("equipment") or eq,
+                "notes": inp.get("notes", "")}
     except Exception as e:
         # Silent fallback to heuristic
         pass
@@ -242,15 +254,7 @@ Data:
 """
 
     try:
-        client = get_client()
-        resp = client.messages.create(
-            model=MODEL,
-            max_tokens=400,
-            system="You write grounded explanations from exact numbers. Never make up data.",
-            messages=[{"role": "user", "content": prompt}],
-        )
-        text = resp.content[0].text if resp.content else ""
-        return text.strip()
+        return ask_claude(prompt, system="You write grounded explanations from exact numbers. Never make up data.")
     except Exception as e:
         # Graceful fallback: pure deterministic summary
         if best:

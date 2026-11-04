@@ -14,9 +14,8 @@ BRAND = {
 }
 
 # === MODEL ===
-# Latest Sonnet by default; override with PROFITLANE_MODEL (e.g. the original
-# hackathon pin "claude-sonnet-4-6"). The model only parses text and writes prose.
-MODEL = _os.environ.get("PROFITLANE_MODEL", "claude-sonnet-5-5")
+# Override with PROFITLANE_MODEL. The model only reads text and writes prose.
+MODEL = _os.environ.get("PROFITLANE_MODEL", "claude-opus-5-5")
 
 # === Cost engine defaults (from spec) ===
 # Override by editing here or (future) via env/CLI.
@@ -89,21 +88,33 @@ PLANS = {
     "free": {
         "name": "Free", "price": 0, "per": "month",
         "daily_searches": 5, "board_rows": 3, "chains": False, "api": False,
-        "features": ["#1 smart pick vs highest-gross", "Top 3 loads", "5 searches / day"],
+        "features": ["5 AI load reads a day", "Unlimited checks you type in yourself",
+                     "Keep, break-even and counter price", "Sample board preview"],
     },
     "pro": {
         "name": "Pro", "price": 39, "per": "month",
         "daily_searches": None, "board_rows": None, "chains": True, "api": False,
-        "features": ["Full ranked board", "Profit Chain: plan 2 loads ahead",
-                     "Unlimited searches", "Owner-op + fleet math"],
+        "features": ["Unlimited AI load reads: text, screenshot or PDF",
+                     "Full sample board and Profit Chain preview", "Owner-operator and fleet math"],
     },
     "fleet": {
         "name": "Fleet", "price": 29, "per": "truck / month", "min_trucks": 3,
         "daily_searches": None, "board_rows": None, "chains": True, "api": True,
-        "features": ["Everything in Pro", "REST API for your TMS / dispatch",
+        "features": ["Everything in Pro", "REST API for your TMS or dispatch software",
                      "Per-truck billing", "Priority support"],
     },
 }
+
+# === Load check ("paste any load"), deterministic ===
+# Profit a load should clear above full cost, per mile driven. Decides take vs counter.
+TARGET_PROFIT_PER_MILE = 0.30
+COUNTER_ROUND_TO = 25.0       # counter prices round up to this many dollars
+ROAD_FACTOR = 1.2             # road miles per straight-line mile, only when loaded miles are missing
+UNKNOWN_MARKET_SCORE = 0.35   # matches forward_scorer's default for an unknown destination
+# Most AI reads the whole service makes per day: a spend limit until rate limiting exists.
+AI_READS_PER_DAY_CAP = int(_os.environ.get("AI_READS_PER_DAY_CAP", "2000"))
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+UPLOAD_TYPES = ("image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf")
 
 # === Persistence (local SQLite, no server) ===
 DB_PATH = _os.environ.get("PROFITLANE_DB", _os.path.join(_os.path.dirname(__file__), "profitlane.db"))

@@ -4,9 +4,29 @@
 
 **🔗 Live demo: https://rohitdvv.github.io/profitlane/**
 
-A load-recommendation agent for owner-operators, small fleets and dispatchers. Started as
-Buildathon Statement 6; now a freemium product (Free / Pro $39 / Fleet $29 per truck).
+Paste any load offer and see what you'd keep, your break-even, and the price to counter with.
+For owner-operators, small fleets and dispatchers. Free / Pro $39 / Fleet $29 per truck.
 See [STRATEGY.md](STRATEGY.md) for the business plan and research behind it.
+
+## Check a load (the product)
+A driver brings an offer from anywhere: pasted text, a screenshot, or a rate-confirmation PDF.
+No load feed is needed, because the driver supplies the load.
+
+1. **Read.** Claude copies the offer into fields. Numbers it can't find word for word in the
+   pasted text, and every number from a file, are marked for the driver to check. Without an
+   API key, pasted text is read by pattern matching.
+2. **Review.** The driver corrects the fields and enters their own costs. Only these reach the math.
+3. **Price.** `load_check.price_load` runs plain Python on `cost_engine`:
+   - **Take it:** net clears the profit target ($0.30 per mile driven, editable).
+   - **Counter:** it makes money but misses the target.
+   - **Pass or counter:** it loses money at this price.
+   - **Counter price** = total cost + target x total miles, rounded up to the next $25,
+     with a message ready to send.
+
+Typing a load in is free and unlimited; AI reads count against the plan's daily limit.
+
+> **Sample data.** The Sample board and Markets pages run on 100,000 synthetic loads dated
+> June 2026. They show how ranking works; they are not real freight.
 
 ## Core Idea
 ProfitLane recommends the single load with the **highest NET profit** (not gross), correctly accounting for where the truck ends up. A load that pays more but drops you in a dead market can be worse than a lower-gross load that leaves you in a strong one — because a dead-market ending forces a long empty (deadhead) drive to find the next load. ProfitLane prices that in.
@@ -36,7 +56,7 @@ flowchart TD
     U["🚛 Driver / Dispatcher<br/>NL query · or Location + Equipment + Radius"] --> APP["app.py — FastAPI<br/>single-page dashboard"]
     APP -->|"POST /api/recommend"| AG["agent.py<br/>orchestrator"]
 
-    subgraph LLM["🟣 Claude (claude-sonnet-5-5) — TEXT ONLY, never math"]
+    subgraph LLM["🟣 Claude (claude-opus-5-5) — TEXT ONLY, never math"]
       direction LR
       P["parse_query<br/>NL → location + equipment"]
       E["explanation<br/>prose grounded in the numbers"]
@@ -105,7 +125,8 @@ different text record formats present, and builds market coords from the ~33% of
 records that include lat/lon (covers all 99 markets).
 
 ## Key Files
-- `config.py` — all constants, brand, plans/pricing, model (`claude-sonnet-5-5`, override with `PROFITLANE_MODEL`)
+- `config.py` — all constants, brand, plans/pricing, model (`claude-opus-5-5`, override with `PROFITLANE_MODEL`)
+- `load_check.py` — Check a load: reads an offer, prices it, writes the counter message
 - `cost_engine.py` — haversine + full itemized cost math (unit tested)
 - `data_layer.py` — robust parser + precomputed market scores + CITY_COORDS
 - `forward_scorer.py` — destination-aware deadhead adjustment + net ranking
@@ -120,8 +141,9 @@ records that include lat/lon (covers all 99 markets).
 ## Live demo (GitHub Pages)
 GitHub Pages only serves static files, so the demo is the same `web/index.html` plus
 `web/static-shim.js`, which answers the page's `/api/*` calls from JSON precomputed by the real
-engine for 20 cities x 4 equipment types (250 mi radius, Pro view). Accounts, payments and live
-search need the FastAPI server. Rebuild after engine or UI changes:
+engine for 20 cities x 4 equipment types (250 mi radius, Pro view). Check a load runs in the
+browser through `web/check-core.js`, which a test holds to the same answers as `load_check.py`.
+Accounts, payments, AI reading and screenshots need the FastAPI server. Rebuild after engine or UI changes:
 
 ```bash
 LOADS_DATA_DIR=/path/to/text python scripts/build_static.py   # writes ./docs
@@ -144,9 +166,9 @@ Operator metrics: `curl -H "X-Admin-Token: $PROFITLANE_ADMIN_TOKEN" localhost:80
 (accounts by plan, MRR estimate, searches today, leads, partner clicks, money found for users).
 
 **Plans** (set in `config.PLANS`, enforced server-side):
-Free: 5 searches/day, #1 pick vs highest-gross, top 3 loads, Profit Chain teaser.
-Pro $39/mo: full board, Profit Chain, unlimited searches.
-Fleet $29/truck/mo (min 3): everything plus the API.
+Free: 5 AI reads or board searches a day; unlimited typed-in checks; top 3 sample loads.
+Pro $39/mo: unlimited AI reads, full sample board, Profit Chain preview.
+Fleet $29/truck/mo (min 3): everything plus the API (`/v1/check/read`, `/v1/check`, `/v1/recommend`).
 
 ## Load-board behavior (deterministic, in config.py)
 - **Pickup radius** (`PICKUP_RADIUS_MILES`, default 250): only loads originating within

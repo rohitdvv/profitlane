@@ -29,6 +29,54 @@
     return { location: city, equipment: eq };
   }
 
+  // Same steps as load_check.evaluate_load, on the data the build script exported.
+  let checkData = null;
+  const getCheck = async () => checkData || (checkData = await (await realFetch(base + 'data/check.json')).json());
+  const locate = (d, name) => {
+    if (!name) return null;
+    const q = name.trim().toLowerCase().replace(/\s*,\s*/, ', ');
+    const key = Object.keys(d.coords).find(k => k.toLowerCase() === q || k.split(',')[0].toLowerCase() === q);
+    return key ? { key, at: d.coords[key] } : null;
+  };
+
+  async function checkEvaluate(b) {
+    const d = await getCheck();
+    const cfg = { ...d.defaults, ...(b.costs || {}) };
+    const o = locate(d, b.origin), dest = locate(d, b.destination), t = locate(d, b.truck_location);
+    const sources = {};
+    let loaded = b.loaded_miles;
+    if (loaded) sources.loaded = 'entered';
+    else if (o && dest) { loaded = Math.round(PLCheck.haversine(o.at, dest.at) * d.road_factor * 10) / 10; sources.loaded = 'estimated'; }
+    else return json({ error: 'need_miles', message: 'Enter the loaded miles. We could not estimate them from these cities.' }, 422);
+    let emptyIn = b.empty_in_miles;
+    if (emptyIn != null) sources.empty_in = 'entered';
+    else if (t && o) { emptyIn = PLCheck.haversine(t.at, o.at); sources.empty_in = 'estimated'; }
+    else { emptyIn = 0; sources.empty_in = 'unknown'; }
+    const score = dest && d.scores[dest.key] != null ? d.scores[dest.key] : null;
+    let emptyOut = b.empty_out_miles;
+    if (emptyOut != null) sources.empty_out = 'entered';
+    else { emptyOut = cfg.base_deadhead_miles * (1 - (score != null ? score : d.unknown_score)); sources.empty_out = 'estimated'; }
+    const target = b.target_profit_per_mile == null ? d.target : b.target_profit_per_mile;
+    const p = PLCheck.priceLoad(b.gross, loaded, emptyIn, emptyOut, cfg, target);
+    let message = null;
+    if (p.counter_price) {
+      const lane = b.origin && b.destination ? `${b.origin} to ${b.destination}` : 'this';
+      const fmt = n => Math.round(n).toLocaleString('en-US');
+      message = `Hi, on your ${lane} load (${fmt(loaded)} mi at $${fmt(b.gross)}), I can run it for $${fmt(p.counter_price)} ($${(p.counter_price / loaded).toFixed(2)}/mi). Let me know if that works.`;
+    }
+    return json({ ...p, origin: b.origin, destination: b.destination, destination_score: score,
+      target_profit_per_mile: target, sources, counter_message: message });
+  }
+
+  function checkRead(b) {
+    if (b.upload_base64) return json({ error: 'ai_unavailable', message: 'Reading screenshots and PDFs runs on the full app. In this demo, paste the text or type the numbers.' }, 422);
+    if (!(b.text || '').trim()) return json({ error: 'empty', message: 'Paste a load offer or attach a file.' }, 400);
+    const f = PLCheck.parseBasic(b.text);
+    const fromRate = f.pay == null && f.rate_per_mile && f.loaded_miles;
+    if (fromRate) f.pay = Math.round(f.rate_per_mile * f.loaded_miles * 100) / 100;
+    return json({ fields: f, check: [], pay_from_rate: !!fromRate, reader: 'basic' });
+  }
+
   async function recommend(body) {
     const m = await getManifest();
     let loc = body.location, eq = body.equipment;
@@ -53,6 +101,8 @@
     const body = init.body ? JSON.parse(init.body) : {};
     switch (path) {
       case '/api/me': return json(ME);
+      case '/api/check': return checkEvaluate(body);
+      case '/api/check/read': return checkRead(body);
       case '/api/recommend': return recommend(body);
       case '/api/plans': return realFetch(base + 'data/plans.json');
       case '/api/markets': return realFetch(base + 'data/markets.json');
@@ -68,7 +118,7 @@
     if (rad) { rad.value = m.radius; rad.disabled = true; document.getElementById('radv').textContent = m.radius + ' mi'; }
     const hsw = document.getElementById('hsw');
     if (hsw) { hsw.disabled = true; hsw.title = 'Fixed in the demo'; }
-    const pill = document.querySelector('.hero .pill');
-    if (pill) pill.innerHTML = `<span class="dot">Live demo</span> ${m.cities.length} cities, precomputed by the real engine`;
+    const pill = document.getElementById('check-pill');
+    if (pill) pill.innerHTML = '<span class="dot">Demo</span> Reads pasted text by pattern. Screenshots and AI reading run on the full app';
   });
 })();
